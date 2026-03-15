@@ -3,166 +3,690 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ไทบ้าน Community</title>
+    <title>Premium Restaurant POS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        /* โทนสีแอปชุมชน (สว่าง คลีน น่าใช้งาน) */
-        :root {
-            --bg: #F7FAFC;
-            --surface: #FFFFFF;
-            --primary: #FF6B00; /* ส้มแบรนด์ดิ้ง */
-            --text-main: #2D3748;
-            --text-light: #718096;
-            --border: #E2E8F0;
-            --success: #38A169;
+        :root { 
+            --primary: #d97706; /* สีทอง Premium Gold */
+            --bg-base: #0f172a; /* Slate 900 */
+            --bg-app: #f8fafc;  /* Slate 50 */
+        }
+        
+        body { 
+            font-family: 'Prompt', sans-serif; 
+            background-color: var(--bg-base); 
+            display: flex; justify-content: center; min-height: 100vh; margin: 0; 
+            user-select: none; -webkit-tap-highlight-color: transparent; 
+            overscroll-behavior-y: contain; /* กันดึงจอกลับ (Pull to refresh) */
+        }
+        
+        .app-container { 
+            width: 100%; max-width: 480px; 
+            background-color: var(--bg-app); 
+            min-height: 100vh; position: relative; 
+            display: flex; flex-direction: column; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.5); 
+            overflow-x: hidden;
         }
 
-        * { box-sizing: border-box; font-family: sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg); color: var(--text-main); padding-bottom: 70px; }
+        .theme-bg { background-color: var(--primary) !important; color: white !important; }
+        .theme-text { color: var(--primary) !important; }
+        .theme-border { border-color: var(--primary) !important; }
 
-        /* Header (พิกัด & โปรไฟล์) */
-        .header { background: var(--surface); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .location { display: flex; align-items: center; gap: 8px; font-weight: bold; color: var(--primary); font-size: 16px; }
-        .profile-btn { background: #EDF2F7; border: none; padding: 8px 12px; border-radius: 20px; font-weight: bold; color: var(--text-main); cursor: pointer; }
+        /* Navigation */
+        .top-nav { display: flex; background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: 72px; z-index: 40; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .nav-tab { flex: 1; text-align: center; padding: 16px 0; font-size: 14px; font-weight: 600; color: #94a3b8; cursor: pointer; transition: 0.3s; border-bottom: 3px solid transparent; }
+        .nav-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: #f8fafc; }
 
-        /* พื้นที่เนื้อหา */
-        .content { padding: 15px; }
+        /* Table Cards */
+        .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 16px; }
+        .table-card { 
+            aspect-ratio: 1; border-radius: 20px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; cursor: pointer; 
+            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); border: 2px solid transparent; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .table-card:active { transform: scale(0.95); }
+        .table-empty { background: #fff; border-color: #10b981; color: #047857; } /* ว่าง สีเขียว */
+        .table-busy { background: linear-gradient(145deg, #fff7ed, #ffedd5); border-color: #ea580c; color: #c2410c; } /* มีลูกค้า สีส้ม */
 
-        /* ช่องค้นหา */
-        .search-bar { background: var(--surface); padding: 12px 15px; border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .search-bar input { border: none; outline: none; width: 100%; font-size: 14px; color: var(--text-main); }
+        /* UI Elements */
+        .screen { display: none; flex: 1; overflow-y: auto; padding-bottom: 120px; animation: fadeUp 0.3s ease-out; }
+        .screen.active { display: block; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Section Title */
-        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .badge-live { background: #FFF5F5; color: #E53E3E; font-size: 12px; padding: 4px 8px; border-radius: 12px; border: 1px solid #FEB2B2; display: flex; align-items: center; gap: 4px; }
-        .dot { height: 8px; width: 8px; background-color: #E53E3E; border-radius: 50%; display: inline-block; animation: blink 1.5s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
-
-        /* การ์ดร้านค้า */
-        .shop-card { background: var(--surface); border-radius: 16px; overflow: hidden; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s; }
-        .shop-card:active { transform: scale(0.98); }
+        .card { background: white; border-radius: 24px; padding: 20px; margin: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; }
         
-        .shop-img { height: 120px; background-color: #CBD5E0; background-image: linear-gradient(45deg, #E2E8F0 25%, transparent 25%, transparent 75%, #E2E8F0 75%, #E2E8F0), linear-gradient(45deg, #E2E8F0 25%, transparent 25%, transparent 75%, #E2E8F0 75%, #E2E8F0); background-size: 20px 20px; background-position: 0 0, 10px 10px; position: relative; }
-        .shop-distance { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: bold; backdrop-filter: blur(4px); }
-        
-        .shop-info { padding: 15px; }
-        .shop-name { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
-        .shop-status { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-        
-        .status-tag { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; }
-        .status-tag.available { background: #F0FFF4; color: var(--success); }
-        .status-tag.busy { background: #FFF5F5; color: #E53E3E; }
+        .menu-btn { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 12px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: 0.1s; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .menu-btn:active { transform: scale(0.98); background: #f8fafc; }
+        .menu-btn.disabled { opacity: 0.5; filter: grayscale(1); pointer-events: none; }
+        .menu-img { width: 70px; height: 70px; border-radius: 14px; object-fit: cover; background-color: #f1f5f9; }
 
-        /* เมนูด้านล่าง (Bottom Nav) */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--surface); display: flex; border-top: 1px solid var(--border); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
-        .nav-item { flex: 1; padding: 12px 0; text-align: center; font-size: 12px; color: var(--text-light); cursor: pointer; font-weight: bold; }
-        .nav-item.active { color: var(--primary); }
-        .nav-icon { display: block; font-size: 22px; margin-bottom: 4px; }
+        /* Modals */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-content { background: white; padding: 24px; border-radius: 28px; width: 90%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        /* Modal Login (ซ่อนไว้ก่อน) */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
-        .modal-content { background: var(--surface); padding: 25px; border-radius: 16px; width: 85%; max-width: 400px; text-align: center; }
-        .btn-login { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        .btn-line { background: #00C300; color: white; }
-        .btn-google { background: white; color: #757575; border: 1px solid #ccc; }
+        #toast { visibility: hidden; min-width: 200px; background-color: #1e293b; color: #fff; text-align: center; border-radius: 100px; padding: 12px 24px; position: fixed; z-index: 200; left: 50%; bottom: 40px; transform: translateX(-50%); font-weight: bold; font-size: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        #toast.show { visibility: visible; animation: fadein 0.3s, fadeout 0.3s 2.5s forwards; }
+        @keyframes fadeout { from { opacity: 1; transform: translateX(-50%) translateY(0); } to { opacity: 0; transform: translateX(-50%) translateY(10px); } }
+
+        ::-webkit-scrollbar { width: 0px; } /* ซ่อน Scrollbar ให้ดูเป็นแอป */
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="location">
-            📍 <span id="userLocation">พื้นที่ใกล้เคียง</span>
-        </div>
-        <button class="profile-btn" onclick="openLogin()">เข้าสู่ระบบ</button>
-    </div>
-
-    <div class="content">
-        <div class="search-bar">
-            🔍 <input type="text" placeholder="ค้นหาร้านอาหาร, ร้านตัดผม, คิวรถ...">
-        </div>
-
-        <div class="section-title">
-            ร้านที่กำลังเปิดอยู่
-            <div class="badge-live"><span class="dot"></span> LIVE</div>
-        </div>
-
-        <div id="shopContainer">
-            
-            <div class="shop-card">
-                <div class="shop-img">
-                    <div class="shop-distance">📍 1.2 กม.</div>
-                </div>
-                <div class="shop-info">
-                    <div class="shop-name">ร้านผัดไทยยายสม (ตัวอย่าง)</div>
-                    <div style="font-size: 13px; color: var(--text-light);">ผัดไทย, อาหารตามสั่ง</div>
-                    <div class="shop-status">
-                        <span class="status-tag available">✅ ว่าง 3 โต๊ะ</span>
-                        <span style="font-size: 12px; color: var(--primary); font-weight: bold;">ดูเมนู ></span>
-                    </div>
+<div class="app-container">
+    <div class="theme-bg px-5 py-4 flex justify-between items-center sticky top-0 z-50 shadow-lg">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center font-bold text-xl theme-text shadow-inner" id="shop-logo-text">R</div>
+            <div>
+                <h1 id="shop-name" class="font-bold text-xl leading-tight text-white tracking-wide">Restaurant POS</h1>
+                <div class="flex gap-2 items-center mt-1">
+                    <span class="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Premium</span>
+                    <span id="sync-status" class="text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full font-bold flex items-center gap-1"><div class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div> ออนไลน์</span>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="shop-card">
-                <div class="shop-img">
-                    <div class="shop-distance">📍 2.5 กม.</div>
+    <div class="top-nav">
+        <div class="nav-tab active" onclick="switchTab('tables', this)">🍽️ ผังโต๊ะ</div>
+        <div class="nav-tab" onclick="switchTab('bills', this)">🧾 รอเช็คบิล</div>
+        <div class="nav-tab" onclick="attemptAdmin('master', this)">👑 หลังร้าน (Master)</div>
+    </div>
+
+    <div id="screen-tables" class="screen active">
+        <div class="px-5 pt-5 pb-2 flex justify-between items-end">
+            <h2 class="font-bold text-2xl text-slate-800">จัดการโต๊ะ</h2>
+            <div class="flex gap-3 text-xs font-bold text-slate-500">
+                <span class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-emerald-500"></div> ว่าง</span>
+                <span class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-orange-500"></div> มีลูกค้า</span>
+            </div>
+        </div>
+        <div id="grid-tables" class="table-grid"></div>
+    </div>
+
+    <div id="screen-order" class="screen bg-slate-50 hidden">
+        <div class="sticky top-0 bg-white/80 backdrop-blur-md z-10 px-4 py-3 shadow-sm flex items-center justify-between border-b">
+            <div class="flex items-center gap-3">
+                <button onclick="switchTab('tables')" class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-600 active:scale-90 transition-transform">←</button>
+                <h2 class="font-bold text-xl text-slate-800">โต๊ะ <span id="lbl-active-table" class="theme-text"></span></h2>
+            </div>
+        </div>
+
+        <div class="p-4">
+            <h3 class="font-bold text-slate-500 mb-3 text-sm">รายการอาหารและเครื่องดื่ม</h3>
+            <div id="grid-menus" class="flex flex-col gap-3 mb-24"></div>
+        </div>
+
+        <div class="fixed bottom-0 left-0 w-full max-w-[480px] bg-white shadow-[0_-10px_30px_rgba(0,0,0,0.1)] rounded-t-3xl transition-transform" style="margin: 0 auto; right: 0;">
+            <div id="cart-drawer" class="max-h-[40vh] overflow-y-auto p-5 hidden border-b">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-bold text-slate-800">รายการที่พนักงานคีย์</span>
+                    <button onclick="clearCart()" class="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg font-bold">ล้างทิ้ง</button>
                 </div>
-                <div class="shop-info">
-                    <div class="shop-name">ร้านสระไดร์ พี่หนู (ตัวอย่าง)</div>
-                    <div style="font-size: 13px; color: var(--text-light);">เสริมสวย, สระผม</div>
-                    <div class="shop-status">
-                        <span class="status-tag busy">⏳ คิวเต็ม (รอประมาณ 30 นาที)</span>
-                        <span style="font-size: 12px; color: var(--primary); font-weight: bold;">ดูรายละเอียด ></span>
+                <div id="cart-items" class="divide-y divide-slate-100"></div>
+            </div>
+            <div class="p-5 flex justify-between items-center cursor-pointer" onclick="document.getElementById('cart-drawer').classList.toggle('hidden')">
+                <div>
+                    <span class="text-xs font-bold text-slate-500">ยอดรวม <span id="cart-count" class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full ml-1">0</span> รายการ 🔼</span><br>
+                    <span class="font-bold text-2xl theme-text">฿<span id="cart-total">0</span></span>
+                </div>
+                <button onclick="sendOrder()" class="theme-bg px-8 py-3.5 rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-transform flex items-center gap-2">ส่งออเดอร์ 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-bills" class="screen">
+        <div class="px-5 pt-5 pb-2">
+            <h2 class="font-bold text-2xl text-slate-800">โต๊ะที่กำลังทาน</h2>
+            <p class="text-xs font-bold text-slate-400">กดที่โต๊ะเพื่อเช็คบิล หรือสั่งอาหารเพิ่ม</p>
+        </div>
+        <div id="list-bills" class="flex flex-col gap-3 px-4 mt-2"></div>
+    </div>
+
+    <div id="screen-master" class="screen bg-slate-100">
+        <div class="p-5 flex justify-between items-center bg-white shadow-sm mb-4">
+            <h2 class="font-bold text-2xl text-slate-800">👑 หลังร้าน</h2>
+            <button onclick="logoutAdmin()" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-sm font-bold active:scale-95">ออกจากระบบ</button>
+        </div>
+
+        <div class="card !mt-0">
+            <h3 class="font-bold text-slate-800 mb-4 border-b pb-2 flex justify-between items-center">
+                <span>จัดการเมนูอาหาร</span>
+                <button onclick="openMenuModal()" class="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg font-bold">+ เพิ่มเมนู</button>
+            </h3>
+            <div id="admin-menu-list" class="divide-y divide-slate-100"></div>
+        </div>
+
+        <div class="card">
+            <h3 class="font-bold text-slate-800 mb-4 border-b pb-2">⚙️ ตั้งค่าระบบโต๊ะ</h3>
+            <div class="flex items-center gap-3">
+                <input id="sys-table-count" type="number" placeholder="จำนวนโต๊ะทั้งหมด" class="border p-3 rounded-xl flex-1 font-bold outline-none text-center bg-slate-50">
+                <button onclick="updateTableCount()" class="theme-bg text-white px-5 py-3 rounded-xl font-bold">บันทึก</button>
+            </div>
+            <p class="text-[10px] text-orange-500 font-bold mt-2">*คำเตือน: การเปลี่ยนจำนวนโต๊ะ จะล้างข้อมูลโต๊ะที่ว่างอยู่</p>
+        </div>
+        
+        <div class="card">
+            <button onclick="factoryReset()" class="w-full bg-red-100 text-red-600 py-4 rounded-xl font-bold border border-red-200">⚠️ ล้างระบบทั้งหมด (Factory Reset)</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-pin">
+    <div class="modal-content text-center">
+        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">🔒</div>
+        <h3 class="font-bold text-xl mb-1 text-slate-800">รหัสผ่านเจ้าของร้าน</h3>
+        <p class="text-xs text-slate-500 mb-6 font-bold">ใส่รหัส PIN เพื่อเข้าระบบ (ค่าเริ่มต้น: 1234)</p>
+        <input type="password" id="input-pin" class="w-full border-2 border-slate-200 p-4 rounded-2xl text-center text-4xl font-bold tracking-[0.5em] mb-6 outline-none bg-slate-50 text-slate-800 focus:border-[var(--primary)]" inputmode="numeric" maxlength="4">
+        <div class="flex gap-3">
+            <button onclick="closeModal('modal-pin')" class="flex-1 bg-slate-100 py-3.5 rounded-xl font-bold text-slate-600">ยกเลิก</button>
+            <button onclick="verifyPin()" class="flex-1 theme-bg py-3.5 rounded-xl font-bold shadow-md text-white">ยืนยัน</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-table-action">
+    <div class="modal-content !p-0 overflow-hidden text-center bg-slate-50">
+        <div class="bg-white p-6 border-b">
+            <h3 class="font-bold text-2xl text-slate-800">โต๊ะ <span id="action-table-id" class="theme-text"></span></h3>
+            <p class="text-sm font-bold text-slate-500 mt-1">ยอดทานปัจจุบัน: <span class="text-lg text-black">฿<span id="action-table-total">0</span></span></p>
+        </div>
+        <div class="p-6 flex flex-col gap-3">
+            <button onclick="addMoreFood()" class="w-full bg-white border-2 border-slate-200 text-slate-700 py-4 rounded-2xl font-bold text-lg active:scale-95 transition-transform shadow-sm">🍳 สั่งอาหารเพิ่ม</button>
+            <button onclick="checkoutTable()" class="w-full bg-emerald-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-transform border border-emerald-600">💳 ชำระเงิน (เช็คบิล)</button>
+            <button onclick="closeModal('modal-table-action')" class="w-full mt-2 text-slate-400 font-bold text-sm py-2">ปิดหน้าต่าง</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-menu">
+    <div class="modal-content">
+        <h3 class="font-bold text-xl mb-4 text-slate-800 border-b pb-3">🍽️ สร้าง/แก้ไขเมนู</h3>
+        <input type="hidden" id="form-menu-id">
+        <div class="space-y-4">
+            <div><label class="text-xs font-bold text-slate-500 mb-1 block">ชื่อเมนูอาหาร</label><input type="text" id="form-menu-name" class="w-full border-2 p-3 rounded-xl outline-none bg-slate-50 font-bold text-slate-800 focus:border-[var(--primary)]"></div>
+            <div><label class="text-xs font-bold text-slate-500 mb-1 block">ราคา (บาท)</label><input type="number" id="form-menu-price" class="w-full border-2 p-3 rounded-xl outline-none bg-slate-50 font-bold text-slate-800 focus:border-[var(--primary)]"></div>
+        </div>
+        <div class="flex gap-3 mt-6">
+            <button onclick="closeModal('modal-menu')" class="flex-1 bg-slate-100 py-3.5 rounded-xl font-bold text-slate-600">ยกเลิก</button>
+            <button onclick="saveMenu()" class="flex-[2] theme-bg py-3.5 rounded-xl font-bold shadow-md text-white">บันทึกข้อมูล</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast">ข้อความ</div>
+
+<script>
+// ==========================================
+// 🧠 1. IndexedDB Engine (The Core)
+// ทำงานแบบ Asynchronous เสถียรสุดๆ พร้อมชน Firebase
+// ==========================================
+const DB_NAME = "MasterRestoDB";
+const DB_VERSION = 1;
+let idb;
+
+// ฟังก์ชันเชื่อมต่อฐานข้อมูลใน Browser
+function initIndexedDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            // สร้างตารางข้อมูล
+            if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings');
+            if (!db.objectStoreNames.contains('tables')) db.createObjectStore('tables', { keyPath: 'id' });
+            if (!db.objectStoreNames.contains('menus')) db.createObjectStore('menus', { keyPath: 'id' });
+            if (!db.objectStoreNames.contains('sales')) db.createObjectStore('sales', { keyPath: 'id' });
+        };
+        
+        request.onsuccess = (event) => { idb = event.target.result; resolve(idb); };
+        request.onerror = (event) => { reject("IndexedDB Error"); };
+    });
+}
+
+// Wrapper Functions สำหรับดึง/ใส่ข้อมูลแบบง่ายๆ
+const DB = {
+    get: (storeName, key) => new Promise(res => {
+        const req = idb.transaction(storeName).objectStore(storeName).get(key);
+        req.onsuccess = () => res(req.result);
+    }),
+    getAll: (storeName) => new Promise(res => {
+        const req = idb.transaction(storeName).objectStore(storeName).getAll();
+        req.onsuccess = () => res(req.result);
+    }),
+    put: (storeName, item) => new Promise(res => {
+        const req = idb.transaction(storeName, 'readwrite').objectStore(storeName).put(item);
+        req.onsuccess = () => res(req.result);
+    }),
+    delete: (storeName, key) => new Promise(res => {
+        const req = idb.transaction(storeName, 'readwrite').objectStore(storeName).delete(key);
+        req.onsuccess = () => res();
+    }),
+    clear: (storeName) => new Promise(res => {
+        const req = idb.transaction(storeName, 'readwrite').objectStore(storeName).clear();
+        req.onsuccess = () => res();
+    })
+};
+
+// ==========================================
+// 📌 2. App State & Boot Logic
+// ==========================================
+let isAdmin = false;
+let activeTableId = null;
+let cart = []; // ตะกร้าชั่วคราว (อยู่ใน RAM)
+
+async function bootApp() {
+    await initIndexedDB();
+    
+    // ตรวจสอบว่ามีข้อมูลตั้งต้นไหม ถ้าไม่มีให้สร้าง (Seed Data)
+    let isSetup = await DB.get('settings', 'isSetup');
+    if (!isSetup) {
+        await DB.put('settings', '1234', 'pin');
+        await DB.put('settings', 10, 'tableCount'); // เริ่มต้นที่ 10 โต๊ะ
+        await DB.put('settings', true, 'isSetup');
+        await seedDefaultData();
+    }
+    
+    // โหลดหน้าจอหลัก
+    await refreshUI();
+}
+
+async function seedDefaultData() {
+    // สร้างโต๊ะ 10 ตัว
+    for(let i=1; i<=10; i++) {
+        await DB.put('tables', { id: i, status: 'empty', orders: [], startTime: null });
+    }
+    // สร้างเมนูตัวอย่าง
+    const sampleMenus = [
+        { id: 1, name: "กะเพราหมูสับ (กับข้าว)", price: 120 },
+        { id: 2, name: "ต้มยำกุ้งน้ำข้น", price: 180 },
+        { id: 3, name: "ปลากะพงทอดน้ำปลา", price: 350 },
+        { id: 4, name: "น้ำแข็ง (ถัง)", price: 20 },
+        { id: 5, name: "น้ำเปล่า (ขวด)", price: 15 }
+    ];
+    for(let m of sampleMenus) { await DB.put('menus', m); }
+}
+
+async function refreshUI() {
+    await renderTableGrid();
+    await renderBillList();
+    if(isAdmin) await renderAdminPanel();
+}
+
+// ==========================================
+// 🎨 3. UI Navigation & Helpers
+// ==========================================
+function showToast(msg, isSuccess = true) { 
+    const toast = document.getElementById("toast"); 
+    toast.innerText = msg; 
+    toast.style.backgroundColor = isSuccess ? '#10b981' : '#ef4444';
+    toast.className = "show"; 
+    setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2800); 
+}
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+function switchTab(id, tabEl = null) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(`screen-${id}`).classList.add('active');
+    if(tabEl) tabEl.classList.add('active');
+    else {
+        // Fallback styling for programmatic tab switching
+        const tabs = document.querySelectorAll('.nav-tab');
+        if(id === 'tables' || id === 'order') tabs[0].classList.add('active');
+        else if(id === 'bills') tabs[1].classList.add('active');
+        else if(id === 'master') tabs[2].classList.add('active');
+    }
+    refreshUI();
+}
+
+// ==========================================
+// 🔐 4. Master Mode (Admin Logic)
+// ==========================================
+function attemptAdmin(target, tabEl) {
+    if(isAdmin) { switchTab(target, tabEl); } 
+    else { 
+        document.getElementById('input-pin').value = ""; 
+        document.getElementById('modal-pin').style.display = 'flex'; 
+        setTimeout(() => document.getElementById('input-pin').focus(), 100); 
+    }
+}
+
+async function verifyPin() {
+    const input = document.getElementById('input-pin').value;
+    const correctPin = await DB.get('settings', 'pin');
+    if(input === correctPin) {
+        isAdmin = true;
+        closeModal('modal-pin');
+        switchTab('master');
+        showToast("เข้าระบบ Master สำเร็จ");
+    } else {
+        showToast("รหัส PIN ผิดพลาด!", false);
+    }
+}
+function logoutAdmin() { isAdmin = false; switchTab('tables'); showToast("ออกจากระบบ Master แล้ว"); }
+
+// ==========================================
+// 🍽️ 5. Table Management (Staff Core)
+// ==========================================
+async function renderTableGrid() {
+    const tables = await DB.getAll('tables');
+    // Sort tables logically
+    tables.sort((a,b) => a.id - b.id);
+    
+    const grid = document.getElementById('grid-tables');
+    grid.innerHTML = '';
+    
+    tables.forEach(t => {
+        const isBusy = t.status === 'busy';
+        const cssClass = isBusy ? 'table-busy' : 'table-empty';
+        const label = isBusy ? 'กำลังทาน' : 'ว่าง';
+        
+        grid.innerHTML += `
+            <div class="table-card ${cssClass}" onclick="handleTableClick(${t.id}, '${t.status}')">
+                <div class="text-4xl font-bold leading-none mb-1">${t.id}</div>
+                <div class="text-[10px] font-bold tracking-wide uppercase bg-white/50 px-2 py-0.5 rounded-md">${label}</div>
+            </div>
+        `;
+    });
+}
+
+async function handleTableClick(tableId, status) {
+    activeTableId = tableId;
+    if (status === 'empty') {
+        // โต๊ะว่าง -> ไปหน้าสั่งอาหาร
+        cart = []; // ล้างตะกร้า
+        updateCartUI();
+        await renderMenus();
+        document.getElementById('lbl-active-table').innerText = tableId;
+        switchTab('order');
+    } else {
+        // โต๊ะไม่ว่าง -> เปิด Action Modal ให้เลือกว่าจะสั่งเพิ่มหรือเช็คบิล
+        const table = await DB.get('tables', tableId);
+        const total = table.orders.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        document.getElementById('action-table-id').innerText = tableId;
+        document.getElementById('action-table-total').innerText = total.toLocaleString();
+        document.getElementById('modal-table-action').style.display = 'flex';
+    }
+}
+
+async function addMoreFood() {
+    closeModal('modal-table-action');
+    cart = []; updateCartUI();
+    await renderMenus();
+    document.getElementById('lbl-active-table').innerText = activeTableId;
+    switchTab('order');
+}
+
+// ==========================================
+// 📋 6. Order & Cart System
+// ==========================================
+async function renderMenus() {
+    const menus = await DB.getAll('menus');
+    const grid = document.getElementById('grid-menus');
+    grid.innerHTML = '';
+    
+    if(menus.length === 0) {
+        grid.innerHTML = '<div class="text-center p-6 text-slate-400 font-bold border-2 border-dashed rounded-2xl">ยังไม่มีเมนูอาหาร (เพิ่มใน Master Mode)</div>';
+        return;
+    }
+
+    menus.forEach(m => {
+        grid.innerHTML += `
+            <div class="menu-btn" onclick="addToCart(${m.id}, '${m.name}', ${m.price})">
+                <div class="w-[60px] h-[60px] bg-slate-100 rounded-xl flex items-center justify-center text-2xl border">🍲</div>
+                <div class="flex-1">
+                    <div class="font-bold text-slate-800 text-sm leading-tight">${m.name}</div>
+                    <div class="theme-text font-bold text-sm mt-1">฿${m.price}</div>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center font-bold text-slate-400">+</div>
+            </div>
+        `;
+    });
+}
+
+function addToCart(id, name, price) {
+    let existing = cart.find(c => c.id === id);
+    if(existing) { existing.qty += 1; } 
+    else { cart.push({ id, name, price, qty: 1 }); }
+    updateCartUI();
+    showToast(`เพิ่ม ${name} แล้ว`);
+}
+
+function clearCart() { cart = []; updateCartUI(); }
+
+function updateCartUI() {
+    const list = document.getElementById('cart-items');
+    list.innerHTML = '';
+    let totalQty = 0; let grandTotal = 0;
+
+    cart.forEach((c, index) => {
+        const lineTotal = c.price * c.qty;
+        totalQty += c.qty; grandTotal += lineTotal;
+        list.innerHTML += `
+            <div class="flex justify-between items-center py-3 text-sm">
+                <div class="flex-1">
+                    <span class="font-bold text-slate-700">${c.name}</span>
+                    <span class="text-[10px] bg-slate-100 border px-1.5 py-0.5 rounded-md font-bold text-slate-600 ml-1">x${c.qty}</span>
+                </div>
+                <div class="font-bold theme-text text-base mr-3">฿${lineTotal.toLocaleString()}</div>
+                <button onclick="cart.splice(${index}, 1); updateCartUI();" class="w-8 h-8 rounded-full bg-red-50 text-red-500 font-bold flex items-center justify-center">×</button>
+            </div>
+        `;
+    });
+
+    document.getElementById('cart-count').innerText = totalQty;
+    document.getElementById('cart-total').innerText = grandTotal.toLocaleString();
+    
+    // Auto show/hide drawer logic can go here if needed
+}
+
+// ส่งออเดอร์เข้า DB (และเตรียมซิงค์)
+async function sendOrder() {
+    if(cart.length === 0) return showToast("ตะกร้าว่างเปล่า!", false);
+    
+    // ดึงข้อมูลโต๊ะปัจจุบันมาจาก DB
+    let table = await DB.get('tables', activeTableId);
+    
+    // อัปเดตสถานะและข้อมูล
+    if(table.status === 'empty') table.startTime = Date.now();
+    table.status = 'busy';
+    
+    // นำของในตะกร้าไปต่อท้ายออเดอร์เดิม
+    cart.forEach(newItem => {
+        let existing = table.orders.find(o => o.id === newItem.id);
+        if(existing) existing.qty += newItem.qty;
+        else table.orders.push({...newItem});
+    });
+
+    // เซฟลง IndexedDB
+    await DB.put('tables', table);
+    
+    // [SYNC-HOOK] ส่งข้อมูล Order ไป Firebase ตรงนี้
+    // e.g., firebase.firestore().collection('tables').doc(table.id.toString()).set(table);
+    
+    cart = []; // ล้างตะกร้าหลังส่ง
+    document.getElementById('cart-drawer').classList.add('hidden');
+    showToast(`ออเดอร์โต๊ะ ${activeTableId} ส่งสำเร็จ!`);
+    switchTab('tables');
+}
+
+// ==========================================
+// 💳 7. Billing & Checkout System
+// ==========================================
+async function renderBillList() {
+    const tables = await DB.getAll('tables');
+    const busyTables = tables.filter(t => t.status === 'busy');
+    const list = document.getElementById('list-bills');
+    list.innerHTML = '';
+
+    if(busyTables.length === 0) {
+        list.innerHTML = '<div class="text-center p-8 bg-white rounded-3xl border border-slate-100 font-bold text-slate-400 shadow-sm">ไม่มีโต๊ะที่กำลังทาน 🎉</div>';
+        return;
+    }
+
+    const now = Date.now();
+    busyTables.forEach(t => {
+        const total = t.orders.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const mins = Math.floor((now - t.startTime) / 60000);
+        
+        list.innerHTML += `
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center cursor-pointer active:scale-95 transition-transform" onclick="handleTableClick(${t.id}, 'busy')" style="border-left: 6px solid var(--primary);">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-orange-50 text-orange-600 flex flex-col items-center justify-center font-bold border border-orange-100">
+                        <span class="text-[10px] opacity-70 leading-none">โต๊ะ</span>
+                        <span class="text-xl leading-tight">${t.id}</span>
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-800">${t.orders.length} รายการ</div>
+                        <div class="text-[10px] text-slate-500 font-bold mt-0.5">⏱ ทานมา ${mins} นาที</div>
                     </div>
                 </div>
+                <div class="text-right">
+                    <div class="font-bold text-xl theme-text">฿${total.toLocaleString()}</div>
+                    <div class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-md font-bold inline-block mt-1">รอเช็คบิล</div>
+                </div>
             </div>
+        `;
+    });
+}
 
-        </div>
-    </div>
+async function checkoutTable() {
+    closeModal('modal-table-action');
+    let table = await DB.get('tables', activeTableId);
+    const total = table.orders.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    
+    // สร้าง Record ยอดขาย
+    const saleRecord = {
+        id: Date.now(),
+        tableId: table.id,
+        amount: total,
+        items: [...table.orders],
+        timestamp: new Date().toISOString()
+    };
+    await DB.put('sales', saleRecord);
 
-    <div class="bottom-nav">
-        <div class="nav-item active">
-            <span class="nav-icon">🧭</span>สำรวจ
-        </div>
-        <div class="nav-item">
-            <span class="nav-icon">🧾</span>ออเดอร์
-        </div>
-        <div class="nav-item" onclick="openLogin()">
-            <span class="nav-icon">👤</span>ฉัน
-        </div>
-    </div>
+    // [SYNC-HOOK] ส่งยอดขายเข้า Firebase ตรงนี้
 
-    <div class="modal" id="loginModal">
-        <div class="modal-content">
-            <h3 style="margin-bottom: 10px;">เข้าสู่ระบบ</h3>
-            <p style="font-size: 13px; color: var(--text-light); margin-bottom: 20px;">เพื่อสั่งอาหารและจองคิวร้านค้าในชุมชน</p>
-            
-            <button class="btn-login btn-line">ล็อกอินด้วย LINE</button>
-            <button class="btn-login btn-google">ล็อกอินด้วย Google</button>
-            
-            <button onclick="closeLogin()" style="margin-top: 20px; background: none; border: none; color: var(--text-light); cursor: pointer;">ปิด</button>
-        </div>
-    </div>
+    // เคลียร์โต๊ะ
+    table.status = 'empty';
+    table.orders = [];
+    table.startTime = null;
+    await DB.put('tables', table);
 
-    <script>
-        // ระบบจำลองเปิด/ปิดหน้าต่าง Login
-        const modal = document.getElementById('loginModal');
-        function openLogin() { modal.style.display = 'flex'; }
-        function closeLogin() { modal.style.display = 'none'; }
+    // [SYNC-HOOK] อัปเดตสถานะโต๊ะกลับเป็นว่างบน Firebase ตรงนี้
 
-        // ปิด modal เวลากดพื้นที่ว่าง
-        window.onclick = function(event) {
-            if (event.target == modal) { closeLogin(); }
+    showToast(`รับชำระเงิน โต๊ะ ${activeTableId} สำเร็จ!`);
+    switchTab('tables');
+}
+
+// ==========================================
+// 👑 8. Admin / Master Data Management
+// ==========================================
+async function renderAdminPanel() {
+    const menus = await DB.getAll('menus');
+    const list = document.getElementById('admin-menu-list');
+    list.innerHTML = '';
+    
+    menus.forEach(m => {
+        list.innerHTML += `
+            <div class="py-4 flex justify-between items-center">
+                <div>
+                    <div class="font-bold text-slate-800">${m.name}</div>
+                    <div class="text-sm font-bold theme-text">฿${m.price}</div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="editMenu(${m.id})" class="text-xs bg-slate-100 font-bold text-slate-600 px-3 py-1.5 rounded-lg border">แก้ไข</button>
+                    <button onclick="deleteMenu(${m.id})" class="text-xs bg-red-50 font-bold text-red-600 px-3 py-1.5 rounded-lg border border-red-100">ลบ</button>
+                </div>
+            </div>
+        `;
+    });
+
+    const tbCount = await DB.get('settings', 'tableCount');
+    document.getElementById('sys-table-count').value = tbCount || 10;
+}
+
+function openMenuModal() {
+    document.getElementById('form-menu-id').value = '';
+    document.getElementById('form-menu-name').value = '';
+    document.getElementById('form-menu-price').value = '';
+    document.getElementById('modal-menu').style.display = 'flex';
+}
+
+async function editMenu(id) {
+    const menu = await DB.get('menus', id);
+    document.getElementById('form-menu-id').value = menu.id;
+    document.getElementById('form-menu-name').value = menu.name;
+    document.getElementById('form-menu-price').value = menu.price;
+    document.getElementById('modal-menu').style.display = 'flex';
+}
+
+async function saveMenu() {
+    const id = document.getElementById('form-menu-id').value;
+    const name = document.getElementById('form-menu-name').value;
+    const price = parseInt(document.getElementById('form-menu-price').value);
+    
+    if(!name || !price) return showToast("กรอกข้อมูลให้ครบ!", false);
+
+    const payload = { id: id ? parseInt(id) : Date.now(), name, price };
+    await DB.put('menus', payload);
+    
+    // [SYNC-HOOK] ซิงค์เมนูขึ้น Firebase
+    
+    closeModal('modal-menu');
+    showToast("บันทึกเมนูสำเร็จ");
+    renderAdminPanel();
+}
+
+async function deleteMenu(id) {
+    if(confirm("แน่ใจนะว่าจะลบทิ้ง?")) {
+        await DB.delete('menus', id);
+        // [SYNC-HOOK] ลบเมนูบน Firebase
+        showToast("ลบเมนูเรียบร้อย");
+        renderAdminPanel();
+    }
+}
+
+async function updateTableCount() {
+    const newCount = parseInt(document.getElementById('sys-table-count').value);
+    if(newCount < 1 || newCount > 100) return showToast("จำนวนโต๊ะไม่ถูกต้อง", false);
+    
+    if(confirm("คำเตือน: โต๊ะที่ว่างอยู่จะถูกจัดเรียงใหม่ โต๊ะที่มีลูกค้าจะไม่ได้รับผลกระทบ ยืนยันไหม?")) {
+        await DB.put('settings', newCount, 'tableCount');
+        const existingTables = await DB.getAll('tables');
+        
+        // ลบโต๊ะที่ว่างทิ้งก่อน แล้วสร้างใหม่ให้ครบตามจำนวน
+        for(let t of existingTables) { if(t.status === 'empty') await DB.delete('tables', t.id); }
+        for(let i=1; i<=newCount; i++) {
+            let exist = await DB.get('tables', i);
+            if(!exist) await DB.put('tables', { id: i, status: 'empty', orders: [], startTime: null });
         }
+        showToast("อัปเดตผังโต๊ะสำเร็จ");
+        renderTableGrid();
+    }
+}
 
-        // ขอสิทธิ์ Location (จำลองให้ดูสมจริง)
-        setTimeout(() => {
-            if(navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(() => {
-                    document.getElementById('userLocation').innerText = "พิกัดของคุณ (พร้อมใช้งาน)";
-                }, () => {
-                    // ถ้าไม่ยอมให้พิกัด
-                });
-            }
-        }, 1000);
-    </script>
+async function factoryReset() {
+    if(confirm("ล้างข้อมูลทั้งหมด (รวมถึงยอดขายและเมนู) กู้คืนไม่ได้ ยืนยันไหม?")) {
+        await DB.clear('settings');
+        await DB.clear('tables');
+        await DB.clear('menus');
+        await DB.clear('sales');
+        location.reload();
+    }
+}
+
+// ==========================================
+// 🚀 เริ่มการทำงานของแอป
+// ==========================================
+window.onload = bootApp;
+
+</script>
 </body>
 </html>
