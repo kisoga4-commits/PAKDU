@@ -286,7 +286,7 @@ async function bootApp() {
     // ตรวจสอบว่ามีข้อมูลตั้งต้นไหม ถ้าไม่มีให้สร้าง (Seed Data)
     let isSetup = await DB.get('settings', 'isSetup');
     if (!isSetup) {
-        await DB.put('settings', '1234', 'pin');
+        await DB.put('settings', 'admin', 'pin');
         await DB.put('settings', 10, 'tableCount'); // เริ่มต้นที่ 10 โต๊ะ
         await DB.put('settings', true, 'isSetup');
         await seedDefaultData();
