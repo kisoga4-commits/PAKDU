@@ -4,12 +4,13 @@
 
 // 1. ใส่รหัสกุญแจ Firebase ของพี่ตรงนี้ (เดี๋ยวเราไปสมัครแล้วเอามาใส่ทีหลัง)
 const firebaseConfig = {
-    apiKey: "รหัส_API_KEY",
-    authDomain: "ชื่อโปรเจกต์.firebaseapp.com",
-    projectId: "ชื่อโปรเจกต์",
-    storageBucket: "ชื่อโปรเจกต์.appspot.com",
-    messagingSenderId: "รหัสผู้ส่ง",
-    appId: "รหัส_APP_ID"
+  apiKey: "AIzaSyC4jOmVcZp0HmmDqZCmHufnq2yyoPcvyVM",
+  authDomain: "pakdu-a26c4.firebaseapp.com",
+  projectId: "pakdu-a26c4",
+  storageBucket: "pakdu-a26c4.firebasestorage.app",
+  messagingSenderId: "414809008203",
+  appId: "1:414809008203:web:757dceafa78d91900d85ce",
+  measurementId: "G-2B03KJ4D68"
 };
 
 // 2. เริ่มต้นเชื่อมต่อ Firebase
