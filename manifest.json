@@ -1,0 +1,26 @@
+{
+  "name": "PosThaiban: ระบบร้านค้าและบอร์ดชุมชน",
+  "short_name": "ไทบ้านPOS",
+  "description": "ระบบจัดการร้านค้าออฟไลน์และเชื่อมต่อชุมชน",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ff5722",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "scope": "/",
+  "lang": "th-TH"
+}
