@@ -1,15 +1,22 @@
 {
-  "name": "FAKDU POS System",
+  "name": "FAKDU POS System v8.0",
   "short_name": "FAKDU",
-  "description": "ระบบจัดการหน้าร้านออฟไลน์ FAKDU",
+  "description": "ระบบจัดการร้านอาหารและคิวแบบ Offline-First",
   "start_url": "./index.html",
   "display": "standalone",
+  "display_override": ["fullscreen", "minimal-ui"],
   "background_color": "#f8fafc",
   "theme_color": "#800000",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2830/2830305.png",
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
