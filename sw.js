@@ -1,4 +1,4 @@
-const CACHE_NAME = 'FAKDU-Cache-v7.20';
+const CACHE_NAME = 'FAKDU-Cache-v8.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
