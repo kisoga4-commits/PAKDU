@@ -1,21 +1,15 @@
 {
-  "name": "Premium Restaurant POS",
-  "short_name": "RestoPOS",
-  "description": "ระบบจัดการร้านอาหารออฟไลน์สำหรับผู้บริหาร",
+  "name": "FAKDU POS System",
+  "short_name": "FAKDU",
+  "description": "ระบบจัดการหน้าร้านออฟไลน์ FAKDU",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#d97706",
-  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#800000",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icons/icon-512.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/2830/2830305.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
