@@ -1,77 +1,74 @@
-const CACHE_NAME = 'resto-pos-v1.0.0';
+// ตั้งชื่อเวอร์ชันแคช (ถ้าวันหลังพี่แก้โค้ด ให้มาเปลี่ยนเลขตรงนี้เป็น v7.18 เพื่อให้แอปอัปเดต)
+const CACHE_NAME = 'FAKDU-Cache-v7.17';
 
-// ระบุไฟล์ที่ต้องการโหลดเก็บไว้ในเครื่องมือถือ (App Shell)
-// ทำให้แอปเปิดติดทันทีแม้ปิดเน็ต
-const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
+// ไฟล์แกนหลักที่ต้องบังคับโหลดลงเครื่องทันที (Pre-cache)
+const STATIC_ASSETS = [
+    './',
+    './index.html',
+    './style.css',
+    './app.js',
+    './manifest.json'
 ];
 
-// 1. Install Event: ติดตั้ง Service Worker และดึงไฟล์เข้าตู้เซฟ
+// 1. Install Event (ติดตั้งทหารยาม และสูบไฟล์หลักลงแคช)
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // บังคับให้ Service Worker ตัวใหม่เข้าทำงานทันที ไม่ต้องรอปิดแอป
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Caching App Shell...');
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
-});
-
-// 2. Activate Event: ล้าง Cache เก่าทิ้งเมื่อมีการเปลี่ยนเวอร์ชัน (เปลี่ยน CACHE_NAME)
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('[Service Worker] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
+    self.skipWaiting(); // บังคับให้ Service Worker ตัวใหม่ทำงานทันที ไม่ต้องรอปิดแอป
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            console.log('[SW] Caching Core Assets...');
+            return cache.addAll(STATIC_ASSETS);
         })
-      );
-    }).then(() => self.clients.claim()) // สั่งให้ Service Worker คุมหน้าเว็บทันที
-  );
+    );
 });
 
-// 3. Fetch Event: หัวใจของระบบ Offline
+// 2. Activate Event (ตื่นขึ้นมาทำงาน และลบแคชเวอร์ชันเก่าทิ้ง)
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    // ถ้าชื่อแคชไม่ตรงกับเวอร์ชันปัจจุบัน ให้ลบทิ้งไปเลย (กันไฟล์ขยะล้นเครื่อง)
+                    if (cacheName !== CACHE_NAME) {
+                        console.log('[SW] Deleting old cache:', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim()) // สั่งให้ทหารยามคุมหน้าเว็บทันที
+    );
+});
+
+// 3. Fetch Event (ดักจับทุกการดึงข้อมูล เพื่อทำระบบ Offline 100%)
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+    // ข้ามการแคชพวก Chrome Extension หรือ API แปลกๆ
+    if (!(event.request.url.indexOf('http') === 0)) return;
 
-  // ⚠️ กฎเหล็ก: ห้าม Cache ข้อมูลจากฐานข้อมูล (Firebase/API/WebSocket)
-  // ปล่อยให้มันวิ่งออกเน็ตไปตรงๆ ข้อมูลจะได้ไม่เพี้ยนและซิงค์ได้ปกติ
-  if (
-    url.hostname.includes('firebase') || 
-    url.hostname.includes('firestore') || 
-    url.hostname.includes('googleapis') ||
-    url.protocol === 'ws:' || 
-    url.protocol === 'wss:' ||
-    event.request.method !== 'GET' // Cache เฉพาะการอ่านไฟล์ ไม่ Cache การส่งข้อมูล (POST/PUT/DELETE)
-  ) {
-    return; 
-  }
+    event.respondWith(
+        caches.match(event.request).then((cachedResponse) => {
+            // เจอไฟล์ในแคช? เอาไปใช้เลย! (เน็ตหลุดก็ทำงานได้)
+            if (cachedResponse) {
+                return cachedResponse;
+            }
+            
+            // ถ้าไม่เจอในแคช (เช่น พวก Tailwind, CDN) ให้วิ่งไปหาเน็ต
+            return fetch(event.request).then((networkResponse) => {
+                // ถ้าโหลดไม่ได้ หรือเป็นไฟล์แปลกๆ ให้ปล่อยผ่าน
+                if (!networkResponse || networkResponse.status !== 200 || (networkResponse.type !== 'basic' && networkResponse.type !== 'cors')) {
+                    return networkResponse;
+                }
 
-  // ใช้กลยุทธ์ "Cache First, fall back to Network"
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      // 3.1 ถ้าเจอไฟล์ในเครื่อง ให้โหลดขึ้นมาแสดงทันที (ไวปานสายฟ้า)
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      
-      // 3.2 ถ้าไม่เจอในเครื่อง ให้ไปดึงจากอินเทอร์เน็ต
-      return fetch(event.request).then((networkResponse) => {
-        return networkResponse;
-      }).catch(() => {
-        // 3.3 ระบบ Fallback: ถ้าเน็ตหลุดและพนักงานเผลอกดรีเฟรชหน้าเว็บ
-        // ให้เด้งกลับไปโหลดหน้า index.html เสมอ เพื่อไม่ให้จอขาว
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
-      });
-    })
-  );
+                // ถ้าโหลดสำเร็จ ให้ก็อปปี้ไฟล์นั้นยัดลงแคชไว้ด้วย (Dynamic Caching)
+                // คราวหน้าเปิดแอปแบบไม่มีเน็ต จะได้มีไฟล์พวกนี้ใช้
+                const responseToCache = networkResponse.clone();
+                caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, responseToCache);
+                });
+
+                return networkResponse;
+            }).catch(() => {
+                // ถ้าเน็ตหลุด และหาในแคชไม่เจอ
+                console.log('[SW] You are offline and resource is not cached.');
+            });
+        })
+    );
 });
