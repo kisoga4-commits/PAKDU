@@ -1,5 +1,5 @@
 // ตั้งชื่อเวอร์ชันแคช (ถ้าวันหลังพี่แก้โค้ด ให้มาเปลี่ยนเลขตรงนี้เป็น v7.18 เพื่อให้แอปอัปเดต)
-const CACHE_NAME = 'FAKDU-Cache-v7.17';
+const CACHE_NAME = 'FAKDU-Cache-v7.18';
 
 // ไฟล์แกนหลักที่ต้องบังคับโหลดลงเครื่องทันที (Pre-cache)
 const STATIC_ASSETS = [
