@@ -543,28 +543,8 @@
     </div>
 </div>
 
-<div id="toast"></div>
-
-    <script>
-// ======================================================================
-// 🔥 FIREBASE CONFIG (เอาของป๋ามาใส่ตรงนี้เพื่อให้ซิงค์ผ่าน Cloud ได้จริง)
-// ======================================================================
-const firebaseConfig = {
-  apiKey: "AIzaSyC4jOmVcZp0HmmDqZCmHufnq2yyoPcvyVM",
-  authDomain: "pakdu-a26c4.firebaseapp.com",
-  databaseURL: "https://pakdu-a26c4-default-rtdb.asia-southeast1.firebasedatabase.app", 
-  projectId: "pakdu-a26c4",
-  storageBucket: "pakdu-a26c4.firebasestorage.app",
-  messagingSenderId: "414809008203",
-  appId: "1:414809008203:web:757dceafa78d91900d85ce"
-};
-
-
-if (!firebase.apps.length) { 
-    firebase.initializeApp(firebaseConfig); 
-}
-
-
+<div id="toast"></div> 
+    
 // ---------------- ฟังก์ชันพื้นฐาน ----------------
 function ds(e) { if(e.keyCode==123||(e.ctrlKey&&e.shiftKey&&(e.keyCode==73||e.keyCode==74))||(e.ctrlKey&&e.keyCode==85)) return false; }
 
