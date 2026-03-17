@@ -548,36 +548,6 @@
 // ---------------- ฟังก์ชันพื้นฐาน ----------------
 function ds(e) { if(e.keyCode==123||(e.ctrlKey&&e.shiftKey&&(e.keyCode==73||e.keyCode==74))||(e.ctrlKey&&e.keyCode==85)) return false; }
 
-function getFingerprint() { 
-    try { const c=document.createElement('canvas'); const x=c.getContext('2d'); x.fillText("FK-7", 2, 10);
-        let h=0, b=c.toDataURL(); for(let i=0;i<b.length;i++) h=((h<<5)-h)+b.charCodeAt(i);
-        return "TB-"+Math.abs(h).toString(16).toUpperCase().substring(0,6);
-    } catch(e) { return "TB-XXXX"; }
-}
-
-function procImgRule(k) {
-    let m = getFingerprint() + "FAKDU_MASTER_V7_2026_TOPSECRET"; let h = 0;
-    for(let i=0;i<m.length;i++){ h=((h<<5)-h)+m.charCodeAt(i); h=h&h; }
-    let hx = Math.abs(h).toString(16).toUpperCase().padStart(8,'0');
-    return k === `FK7-${hx.substring(0,4)}-${hx.substring(4,8)}`;
-}
-
-// ---------------- ตั้งค่า IndexedDB (V8.0) ----------------
-const DB_NAME = 'FakduDB_v800'; 
-const STORE_NAME = 'state';
-
-const DEFAULT_DB = {
-    role: 'master', isPro: false, shopName: "FAKDU", bankName: "", logo: "", theme: "#800000", bgColor: "#f8fafc",
-    unit: "โต๊ะ", unitCount: 4, qrImg: "", promptPay: "", isClosed: false, syncKey: Math.random().toString(36).substring(2,8).toUpperCase(),
-    units: [], items: [], addons: [], sales: [], tempCart: [], alerts: [],
-    pending_sync: [] // 📦 กล่องขาออก สำหรับ Offline
-};
-
-let db = { ...DEFAULT_DB };
-let isAdminLoggedIn = localStorage.getItem('fakdu_admin_auth') === 'true'; 
-let activeUnitId = null; let tempUnitForPeople = null; let cart = [];
-let pendingAddonItem = null; let tempImageBase64 = null; let currentCheckoutTotal = 0;
-let html5QrCode = null; let pendingAdminAction = null;
 
 function initIndexedDB() {
     return new Promise((resolve) => {
