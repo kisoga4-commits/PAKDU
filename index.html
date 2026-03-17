@@ -545,6 +545,25 @@
 
 <div id="toast"></div>
 
+    <script>
+// ======================================================================
+// 🔥 FIREBASE CONFIG (เอาของป๋ามาใส่ตรงนี้เพื่อให้ซิงค์ผ่าน Cloud ได้จริง)
+// ======================================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyC4jOmVcZp0HmmDqZCmHufnq2yyoPcvyVM",
+  authDomain: "pakdu-a26c4.firebaseapp.com",
+  databaseURL: "https://pakdu-a26c4-default-rtdb.firebaseio.com", // <-- ผมเติมบรรทัดนี้ให้แล้ว!
+  projectId: "pakdu-a26c4",
+  storageBucket: "pakdu-a26c4.firebasestorage.app",
+  messagingSenderId: "414809008203",
+  appId: "1:414809008203:web:757dceafa78d91900d85ce"
+};
+
+// เปิดใช้งาน Firebase ทันที
+if (!firebase.apps.length) { 
+    firebase.initializeApp(firebaseConfig); 
+}
+
 <script>
 // ---------------- ฟังก์ชันพื้นฐาน ----------------
 function ds(e) { if(e.keyCode==123||(e.ctrlKey&&e.shiftKey&&(e.keyCode==73||e.keyCode==74))||(e.ctrlKey&&e.keyCode==85)) return false; }
@@ -645,38 +664,7 @@ async function installPWA() {
     }
 }
 
-// ---------------- Bluetooth Printer ----------------
-let printCharacteristic = null;
-async function connectPrinter() {
-    try {
-        const device = await navigator.bluetooth.requestDevice({
-            acceptAllDevices: true,
-            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] 
-        });
-        const server = await device.gatt.connect();
-        const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
-        printCharacteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
-        
-        document.getElementById('printer-status').innerText = '✅ เชื่อมต่อแล้ว';
-        document.getElementById('printer-status').className = 'text-[9px] bg-green-100 text-green-600 px-2 py-1 rounded-md font-bold uppercase tracking-widest shadow-sm';
-        document.getElementById('btn-test-print').classList.remove('hidden');
-        showToast("เชื่อมต่อเครื่องพิมพ์สำเร็จ", "success");
-    } catch(err) {
-        showToast("ยกเลิก หรือไม่พบเครื่องพิมพ์", "error");
-    }
-}
 
-async function testPrint() {
-    if (!printCharacteristic) return showToast("ยังไม่เชื่อมต่อเครื่องพิมพ์", "error");
-    try {
-        const encoder = new TextEncoder();
-        const text = encoder.encode("\x1B\x40" + "FAKDU POS - TEST PRINT\nBluetooth Printer Ready!\n\n\n");
-        await printCharacteristic.writeValue(text);
-        showToast("สั่งพิมพ์สำเร็จ", "success");
-    } catch(e) {
-        showToast("พิมพ์ไม่สำเร็จ เช็คการเชื่อมต่อ", "error");
-    }
-}
 
 // ---------------- เริ่มระบบ ----------------
 async function initApp() {
