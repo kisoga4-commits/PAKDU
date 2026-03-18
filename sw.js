@@ -1,4 +1,4 @@
-const CACHE_NAME = 'FAKDU-V9.22'; // ขยับเลขตรงนี้เพื่อล้างแคชลูกค้า
+const CACHE_NAME = 'FAKDU-V9.23'; // ขยับเลขตรงนี้เพื่อล้างแคชลูกค้า
 const assets = ['/', '/index.html', '/client.html'];
 
 self.addEventListener('install', (e) => {
