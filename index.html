@@ -6,19 +6,19 @@
     <meta name="theme-color" content="#800000">
     <title>FAKDU v9.30 PRO - Master Node</title>
     
-    //* assets open
+    
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link rel="stylesheet" href="style.css"> //** assets close
+    <link rel="stylesheet" href="style.css"> 
 </head>
 <body>
 
 <div class="app-container">
     
-    //* header-status open
+    
     <div id="pwa-install-banner" class="hidden bg-blue-600 text-white w-full px-4 py-3 flex justify-between items-center shadow-md z-[100]">
         <div class="flex items-center gap-2">
             <span class="text-2xl">📲</span><span class="text-xs font-bold leading-tight">ติดตั้งแอป FAKDU<br>ทำงานออฟไลน์ 100%</span>
@@ -47,23 +47,23 @@
             <span class="absolute bottom-1 right-2 text-[9px] font-black text-white/70 tracking-wider">v9.30</span>
         </div>
     </div>
-    //** header-status close
+    
 
-    //* navigation open
+    
     <div class="top-nav">
         <div id="tab-customer" class="nav-tab active" onclick="switchTab('customer', this)">👨‍👩‍👦 ลูกค้า</div>
         <div id="tab-shop" class="nav-tab" onclick="switchTab('shop', this)">🧾 เช็คบิล</div>
         <div id="tab-manage" class="nav-tab" onclick="attemptAdmin('manage', this)">📊 หลังร้าน</div>
         <div id="tab-system" class="nav-tab" onclick="attemptAdmin('system', this)">⚙️ ระบบ</div>
     </div>
-    //** navigation close
+   
 
     <div id="screen-customer" class="screen active p-5 pt-4">...</div>
     <div id="screen-order" class="screen hidden bg-gray-50 p-4">...</div>
     <div id="screen-shop" class="screen hidden p-5 pt-8">...</div>
     <div id="screen-manage" class="screen hidden p-5">...</div>
 
-    //* system-settings open
+   
     <div id="screen-system" class="screen hidden p-5">
         <div class="flex justify-between items-center mb-6">
             <h2 class="font-black text-3xl text-gray-800">ตั้งค่าระบบ</h2>
@@ -96,9 +96,9 @@
             <button onclick="saveSystemSettings()" class="w-full theme-bg py-4 rounded-[22px] font-black text-lg shadow-lg mt-6 active:scale-95">💾 บันทึกการตั้งค่า</button>
         </div>
     </div>
-    //** system-settings close
+   
 
-    //* modals open
+    
     <div class="modal-overlay" id="modal-admin-pin">
         <div class="modal-content text-center">
             <h3 class="font-black text-3xl mb-1 text-gray-800">SECURITY PIN</h3>
@@ -129,11 +129,11 @@
     </div>
 
     <div class="modal-overlay" id="modal-pro-unlock">...</div>
-    //** modals close
+    
 
 <div id="toast"></div>
 
-//* scripts open
+
 <script src="js/vault.js"></script>
 <script src="js/core.js"></script>
 <script>
@@ -144,7 +144,7 @@
         });
     }
 </script>
-//** scripts close
+
 
 </div>
 </body>
