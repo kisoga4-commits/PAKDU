@@ -1,16 +1,24 @@
 {
-  "name": "FAKDU POS v9.20",
+  "name": "FAKDU POS Pro v9.30",
   "short_name": "FAKDU",
-  "description": "ระบบจัดการร้านค้า PWA Offline-First",
+  "description": "Premium Offline-First POS System (Secure Edition)",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#800000",
+  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3429/3429618.png",
+      "src": "./icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
