@@ -30,9 +30,10 @@
                 <div id="online-status-dot" class="absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full border-2 border-white bg-green-500 shadow-sm z-20" title="Online"></div>
                 <img id="shop-logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjYmJiYmJiIi8+PC9zdmc+" class="w-full h-full object-cover rounded-[14px] border-2 border-white shadow-sm bg-white">
             </div>
-            <div class="flex flex-col">
-                <h1 id="display-shop-name" class="font-black text-xl leading-none text-white drop-shadow-md truncate max-w-[100px] mb-1">FAKDU</h1>
-                <div class="flex gap-1 mt-1">
+            <div class="flex gap-1.5 mt-1.5">
+    <div id="header-client-1" class="hidden w-4 h-4 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-[7px] overflow-hidden shadow-sm">👤</div>
+    <div id="header-client-2" class="hidden w-4 h-4 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-[7px] overflow-hidden shadow-sm">👤</div>
+</div>
     <div id="header-client-1" class="hidden w-4 h-4 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-[8px] overflow-hidden">👤</div>
     <div id="header-client-2" class="hidden w-4 h-4 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-[8px] overflow-hidden">👤</div>
 </div>
@@ -161,16 +162,31 @@
         </div>
 
        <div id="pro-recovery-setup" class="bg-red-50 border-2 border-red-200 p-6 rounded-[28px] mb-6 shadow-sm hidden">
-    <h3 class="font-black text-red-700 text-sm mb-4">🛡️ ตั้งค่ากู้คืนรหัส (PRO)</h3>
+    <h3 class="font-black text-red-700 text-sm mb-4">🛡️ กู้คืนรหัสผ่าน (PRO ONLY)</h3>
     
     <div class="mb-3">
-        <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">คำถาม 1: สีที่ชอบ (7 สี)</label>
-        <select id="setup-rec-color" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-white outline-none focus:border-red-400">
-            <option value="">-- กรุณาเลือกสี --</option>
+        <label class="text-[10px] font-bold text-red-400 uppercase ml-1">1. เลือกสีที่ชอบ (7 สี)</label>
+        <select id="setup-rec-color" class="w-full border-2 p-3.5 rounded-2xl text-sm font-bold bg-white outline-none focus:border-red-400">
+            <option value="">-- เลือกสี --</option>
             <option value="red">แดง</option><option value="green">เขียว</option><option value="blue">น้ำเงิน</option>
             <option value="yellow">เหลือง</option><option value="orange">ส้ม</option><option value="purple">ม่วง</option><option value="pink">ชมพู</option>
         </select>
     </div>
+
+    <div class="mb-5">
+        <label class="text-[10px] font-bold text-red-400 uppercase ml-1">2. เลือกสัตว์ที่อยากเป็น (20 ชนิด)</label>
+        <select id="setup-rec-animal" class="w-full border-2 p-3.5 rounded-2xl text-sm font-bold bg-white outline-none focus:border-red-400">
+            <option value="">-- เลือกสัตว์ --</option>
+            <option value="cat">แมว</option><option value="dog">สุนัข</option><option value="lion">สิงโต</option><option value="tiger">เสือ</option>
+            <option value="elephant">ช้าง</option><option value="horse">ม้า</option><option value="rabbit">กระต่าย</option><option value="monkey">ลิง</option>
+            <option value="bird">นก</option><option value="fish">ปลา</option><option value="chicken">ไก่</option><option value="duck">เป็ด</option>
+            <option value="turtle">เต่า</option><option value="frog">กบ</option><option value="bear">หมี</option><option value="panda">แพนด้า</option>
+            <option value="crocodile">จระเข้</option><option value="giraffe">ยีราฟ</option><option value="zebra">ม้าลาย</option><option value="sheep">แกะ</option>
+        </select>
+    </div>
+
+    <button onclick="saveRecoveryData()" class="w-full bg-red-600 text-white py-4 rounded-[20px] font-black text-xs active:scale-95 shadow-lg">💾 บันทึกคำตอบลับ</button>
+</div>
 
     <div class="mb-4">
         <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">คำถาม 2: สัตว์ที่อยากเป็น (20 ชนิด)</label>
@@ -187,11 +203,18 @@
     <button onclick="saveRecoveryData()" class="w-full bg-red-600 text-white py-3 rounded-xl font-black text-xs active:scale-95 shadow-md">💾 บันทึกคำถามลับ</button>
 </div>
 
-        <div class="bg-blue-50 border border-blue-100 p-6 rounded-[28px] mb-6 shadow-sm">
-            <h3 class="font-black text-blue-800 text-sm mb-3">☁️ เชื่อมต่อเครื่องลูก (Client)</h3>
-            <div class="flex gap-3 items-center bg-white p-3 rounded-2xl border border-blue-200 shadow-inner mb-4">
-                <div id="sync-qr-area" class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center">QR</div>
-                <div class="flex-1 text-center">
+        <div class="bg-blue-50 border border-blue-100 p-6 rounded-[28px] mb-6 shadow-sm text-center">
+    <h3 class="font-black text-blue-800 text-sm mb-4 uppercase tracking-widest">สถานะซิงค์ข้อมูล</h3>
+    
+    <div class="flex justify-center gap-5 mb-5">
+        <div id="sync-avatar-1" class="w-12 h-12 rounded-full bg-white border-2 border-dashed border-gray-300 flex items-center justify-center text-[10px] text-gray-400 font-bold overflow-hidden shadow-inner">ว่าง</div>
+        <div id="sync-avatar-2" class="w-12 h-12 rounded-full bg-white border-2 border-dashed border-gray-300 flex items-center justify-center text-[10px] text-gray-400 font-bold overflow-hidden shadow-inner">ว่าง</div>
+    </div>
+
+    <button id="btn-sync-manual" onclick="triggerSyncCheck(this)" class="w-full bg-white text-blue-600 border-2 border-blue-100 py-4 rounded-[22px] font-black text-sm active:scale-95 shadow-sm transition-all duration-300">
+        🔄 เช็คข้อมูลลูกข่าย
+    </button>
+</div>
                     <p class="text-[9px] text-blue-500 font-bold uppercase mb-1">ให้เครื่องลูกสแกน QR นี้</p>
                     <div id="display-sync-key" class="text-3xl font-mono text-blue-900 font-black tracking-[8px]">PIN</div>
                 </div>
