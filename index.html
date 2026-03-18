@@ -913,7 +913,13 @@ function proceedToOrder(id) {
 
 function renderItemButtons() {
     const grid = document.getElementById('grid-items'); grid.innerHTML = '';
-    db.items.forEach(i => { const im = i.img ? `<img src="${i.img}" class="item-img shadow-sm border border-gray-100">` : `<div class="item-img bg-gray-50 flex items-center justify-center text-2xl border border-gray-100">📦</div>`; grid.innerHTML += `<div class="item-btn" onclick="handleItemClick(${i.id})">${im}<div class="flex-1 text-left"><div class="font-black text-gray-800 text-[15px] mb-1">${i.name}</div><div class="theme-text font-black text-sm">฿${i.price}</div></div><div class="bg-gray-50 w-10 h-10 rounded-xl flex items-center justify-center font-black text-xl text-gray-400 border border-gray-100 shadow-sm">+</div></div>`; });
+    db.items.forEach(i => { 
+    // จุดที่ 1: แก้เครื่องหมายรอบ <img src...> และ <div>
+    const im = i.img ? `<img src="${i.img}" class="item-img shadow-sm border border-gray-100">` : `<div class="item-img bg-gray-50 flex items-center justify-center text-2xl border border-gray-100">📦</div>`; 
+    
+    // จุดที่ 2: แก้เครื่องหมายรอบก้อน <div class="item-btn"...> ทั้งหมด
+    grid.innerHTML += `<div class="item-btn" onclick="handleItemClick(${i.id})">${im}<div class="flex-1 text-left"><div class="font-black text-gray-800 text-[15px] mb-1">${i.name}</div><div class="theme-text font-black text-sm">฿${i.price}</div></div><div class="bg-gray-50 w-10 h-10 rounded-xl flex items-center justify-center font-black text-xl text-gray-400 border border-gray-100 shadow-sm">+</div></div>`; 
+});
 }
 
 function handleItemClick(id) {
