@@ -160,13 +160,40 @@ function startHeartbeatMonitor() {
 }
 
 let pendingAdminAction = null; 
-function switchTab(id, el = null) { 
+function switchTab(tabId, el = null) { 
     playSound('click'); 
+
+    // 1. ซ่อนทุกหน้าจอที่มี class "screen"
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); 
-    document.getElementById(`screen-${id}`).classList.remove('hidden'); 
-    if(el) { document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); } 
-    if(id === 'shop') renderShopQueue(); 
-    if(id === 'manage') renderAnalytics(); 
+
+    // 2. แสดงหน้าจอเป้าหมาย (เช็คดักบัคเผื่อหา ID ไม่เจอด้วย)
+    const targetScreen = document.getElementById(`screen-${tabId}`);
+    if (targetScreen) {
+        targetScreen.classList.remove('hidden');
+    } else {
+        console.error(`❌ ไม่พบหน้าจอ: screen-${tabId}`);
+        return;
+    }
+
+    // 3. จัดการสีปุ่ม Tab ให้สวยงามตามธีม PRO
+    if(el) { 
+        document.querySelectorAll('.nav-tab').forEach(t => {
+            t.classList.remove('active', 'border-b-4', 'border-[#800000]', 'text-gray-800');
+            t.classList.add('text-gray-400');
+        });
+        el.classList.add('active', 'border-b-4', 'border-[#800000]', 'text-gray-800');
+        el.classList.remove('text-gray-400');
+    } 
+
+    // 4. [สำคัญ!] ลอจิกเดิมของพี่: โหลดข้อมูลเมื่อสลับหน้า
+    if(tabId === 'shop') {
+        if(typeof renderShopQueue === 'function') renderShopQueue();
+    }
+    if(tabId === 'manage') {
+        // โหลดข้อมูลยอดขายและวิเคราะห์
+        if(typeof renderAnalytics === 'function') renderAnalytics();
+        if(typeof updateDashboard === 'function') updateDashboard(); // ตัวใหม่ของ V9.31
+    }
 }
 function attemptAdmin(target, el) { 
     if(isAdminLoggedIn) { switchTab(target, el); } 
