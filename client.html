@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#2563eb"> <title>FAKDU Client - รับออร์เดอร์</title>
-    
+    <meta name="theme-color" content="#2563eb">
+    <title>FAKDU Client - รับออร์เดอร์</title>
     
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="icon.png">
@@ -12,170 +12,182 @@
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <link rel="stylesheet" href="style.css"> 
-    
 
     <style>
-        
-        body { background-color: #f0f9ff; }
+        body { background-color: #f0f9ff; font-family: 'Prompt', sans-serif; }
         .client-header { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
+        .screen { min-height: calc(100vh - 80px); }
+        .modal-overlay { backdrop-filter: blur(4px); transition: all 0.3s ease; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
+<div class="app-container max-w-[480px] mx-auto min-h-screen bg-white shadow-xl relative overflow-x-hidden">
 
-    
     <div id="screen-pairing" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center p-6">
-        <div class="text-6xl mb-4">📱</div>
-        <h2 class="font-black text-3xl mb-1 text-blue-900">FAKDU Client</h2>
-        <p class="text-xs text-gray-500 mb-8 font-bold uppercase">โหมดพนักงานรับออร์เดอร์</p>
+        <div class="text-6xl mb-4 animate-bounce">📱</div>
+        <h2 class="font-black text-3xl mb-1 text-blue-900 uppercase">FAKDU Client</h2>
+        <p class="text-[10px] text-gray-400 mb-8 font-black uppercase tracking-widest">Employee Order Mode</p>
 
-        <div class="w-full max-w-sm bg-blue-50 border-2 border-blue-100 p-6 rounded-[28px] shadow-sm text-center">
-            <h3 class="font-black text-gray-800 mb-4">กรุณาเชื่อมต่อกับเครื่องแม่</h3>
+        <div class="w-full max-w-sm bg-blue-50 border-2 border-blue-100 p-8 rounded-[32px] shadow-sm text-center">
+            <h3 class="font-black text-gray-800 mb-6">เชื่อมต่อกับเครื่องแม่</h3>
             
-            <div id="qr-reader" class="mb-4 rounded-xl overflow-hidden w-full hidden border-2 border-blue-300 shadow-inner"></div>
+            <div id="qr-reader" class="mb-6 rounded-2xl overflow-hidden w-full hidden border-4 border-white shadow-lg bg-black aspect-square"></div>
             
             <div class="flex gap-2 mb-6" id="scan-btn-group">
-                <button id="btn-scan-qr" onclick="startScanner()" class="flex-1 bg-white text-blue-600 border border-blue-200 py-3 rounded-xl font-black text-xs active:scale-95 shadow-sm">📷 สแกน QR Code</button>
-                <button id="btn-stop-scan" onclick="stopScanner()" class="hidden flex-1 bg-red-50 text-red-600 border border-red-200 py-3 rounded-xl font-black text-xs active:scale-95">หยุดสแกน</button>
+                <button id="btn-scan-qr" onclick="startScanner()" class="flex-1 bg-white text-blue-600 border-2 border-blue-100 py-4 rounded-2xl font-black text-xs active:scale-95 shadow-sm transition-all">📷 สแกน QR Code</button>
+                <button id="btn-stop-scan" onclick="stopScanner()" class="hidden flex-1 bg-red-50 text-red-600 border-2 border-red-100 py-4 rounded-2xl font-black text-xs active:scale-95">หยุดสแกน</button>
             </div>
 
             <div class="relative flex py-2 items-center mb-6">
-                <div class="flex-grow border-t border-gray-300"></div>
-                <span class="flex-shrink-0 mx-4 text-gray-400 text-[10px] font-bold">หรือ</span>
-                <div class="flex-grow border-t border-gray-300"></div>
+                <div class="flex-grow border-t border-gray-200"></div>
+                <span class="flex-shrink-0 mx-4 text-gray-300 text-[9px] font-black uppercase">หรือ</span>
+                <div class="flex-grow border-t border-gray-200"></div>
             </div>
             
-            <input type="text" id="client-pin-input" class="w-full border-2 border-white p-4 rounded-[20px] text-center text-3xl font-black mb-4 outline-none bg-white shadow-inner tracking-[8px] uppercase focus:border-blue-500 placeholder-gray-300" placeholder="PIN">
-            <input type="text" id="client-name-input" class="w-full border-2 border-white p-4 rounded-[20px] text-center text-sm font-bold mb-6 outline-none bg-white shadow-inner focus:border-blue-500" placeholder="ชื่อของคุณ (เช่น น้องส้ม)">
+            <div class="space-y-4 mb-8">
+                <div class="relative">
+                    <input type="text" id="client-pin-input" class="w-full border-2 border-white p-5 rounded-[24px] text-center text-3xl font-black outline-none bg-white shadow-inner tracking-[10px] uppercase focus:border-blue-500 placeholder-gray-200 transition-all" placeholder="PIN">
+                    <label class="absolute -top-2.5 left-6 bg-blue-50 px-2 text-[9px] font-black text-blue-400">SYNC PIN</label>
+                </div>
+                <div class="relative">
+                    <input type="text" id="client-name-input" class="w-full border-2 border-white p-4 rounded-[22px] text-center text-sm font-bold outline-none bg-white shadow-inner focus:border-blue-500 transition-all" placeholder="ระบุชื่อของคุณ (เช่น น้องส้ม)">
+                    <label class="absolute -top-2.5 left-6 bg-blue-50 px-2 text-[9px] font-black text-blue-400">STAFF NAME</label>
+                </div>
+            </div>
             
-            <button onclick="attemptPairing()" class="w-full bg-blue-600 text-white py-4 rounded-[20px] font-black shadow-lg text-lg active:scale-95 transition-transform">เข้าสู่ระบบ 🚀</button>
+            <button onclick="attemptPairing()" class="w-full bg-blue-600 text-white py-5 rounded-[24px] font-black shadow-xl text-lg active:scale-95 transition-all transform hover:scale-[1.02]">เข้าสู่ระบบ 🚀</button>
         </div>
     </div>
-    
 
-    
-    <div class="client-header relative flex justify-between items-center w-full text-white p-4 shadow-md z-50">
+    <div class="client-header relative flex justify-between items-center w-full text-white p-4 pt-6 shadow-lg z-50">
         <div class="flex items-center gap-3">
-            <div class="relative w-[45px] h-[45px] flex-shrink-0">
-                <div id="client-sync-dot" class="absolute -top-1 -left-1 w-3 h-3 rounded-full border-2 border-white bg-green-400 shadow-sm z-20"></div>
-                <div class="w-full h-full bg-white/20 rounded-full flex items-center justify-center text-xl backdrop-blur-sm border border-white/30">👤</div>
+            <div class="relative w-[48px] h-[48px] flex-shrink-0">
+                <div id="client-sync-dot" class="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full border-2 border-white bg-green-400 shadow-sm z-20"></div>
+                <div class="w-full h-full bg-white/20 rounded-2xl flex items-center justify-center text-xl backdrop-blur-md border border-white/30 shadow-inner">👤</div>
             </div>
             <div class="flex flex-col">
-                <h1 id="display-client-name" class="font-black text-lg leading-none drop-shadow-md">ชื่อพนักงาน</h1>
-                <span id="display-shop-name" class="text-[10px] font-bold text-white/80">ชื่อร้านค้า (เชื่อมต่อแล้ว)</span>
+                <h1 id="display-client-name" class="font-black text-lg leading-none drop-shadow-md">พนักงาน</h1>
+                <span id="display-shop-name" class="text-[10px] font-bold text-white/70 mt-1 uppercase tracking-wider">กำลังเชื่อมต่อ...</span>
             </div>
         </div>
-        <button onclick="disconnectClient()" class="bg-red-500/80 hover:bg-red-500 px-3 py-1.5 rounded-full text-[10px] font-black shadow-sm active:scale-95 border border-red-400/50">ออกระบบ</button>
+        <button onclick="disconnectClient()" class="bg-red-500/20 hover:bg-red-500 px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm active:scale-95 border border-red-400/40 backdrop-blur-sm transition-colors">ออกระบบ</button>
     </div>
-    
 
-    
-    <div id="screen-tables" class="screen active p-5">
-        <div class="flex justify-between items-center mb-4">
-            <span class="text-[12px] font-bold text-gray-500 uppercase tracking-widest">เลือกโต๊ะที่ต้องการสั่ง</span>
-            <button onclick="syncNow()" class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold active:scale-95">🔄 อัปเดต</button>
+    <div id="screen-tables" class="screen active p-5 pb-24 overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex flex-col">
+                <span class="text-[12px] font-black text-blue-900 uppercase tracking-widest">Floor Plan</span>
+                <p class="text-[10px] text-gray-400 font-bold">เลือกโต๊ะที่ต้องการเปิดออร์เดอร์</p>
+            </div>
+            <button onclick="syncWithMaster()" class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-xl text-[10px] font-black active:scale-95 border border-blue-100 flex items-center gap-1">🔄 อัปเดต</button>
         </div>
-        <div id="grid-units" class="grid grid-cols-3 gap-3">
+        <div id="grid-units" class="grid grid-cols-3 gap-4">
             </div>
     </div>
-    
 
-    
-    <div id="screen-order" class="screen hidden bg-white">
-        <div class="flex items-center gap-4 p-4 sticky top-0 bg-white/95 backdrop-blur-sm z-10 border-b shadow-sm">
-            <button onclick="backToTables()" class="bg-gray-100 px-4 py-2.5 rounded-xl shadow-sm font-black text-sm text-gray-600 active:scale-95">← กลับ</button>
-            <h2 class="font-black text-xl text-blue-900">โต๊ะ <span id="active-unit-id"></span></h2>
+    <div id="screen-order" class="screen hidden bg-gray-50 flex flex-col h-full">
+        <div class="flex items-center gap-4 p-4 sticky top-0 bg-white/90 backdrop-blur-md z-10 border-b shadow-sm">
+            <button onclick="backToTables()" class="bg-white px-4 py-2.5 rounded-2xl shadow-sm font-black text-sm text-gray-600 border active:scale-95">← กลับ</button>
+            <h2 class="font-black text-xl text-blue-900">โต๊ะ <span id="active-unit-id" class="text-blue-600">--</span></h2>
         </div>
         
-        <div class="p-4 space-y-3 mb-28" id="item-list">
+        <div class="flex-1 p-4 space-y-4 mb-32 overflow-y-auto" id="item-list">
             </div>
 
-        <div class="fixed bottom-0 left-0 w-full max-w-[480px] bg-white shadow-[0_-15px_30px_rgba(0,0,0,0.08)] z-20 mx-auto right-0 rounded-t-[28px] p-4 pb-6 border-t border-gray-100" style="padding-bottom: calc(24px + env(safe-area-inset-bottom));">
+        <div class="fixed bottom-0 left-0 w-full max-w-[480px] bg-white shadow-[0_-15px_40px_rgba(0,0,0,0.1)] z-20 mx-auto right-0 rounded-t-[32px] p-5 pb-8 border-t border-gray-100">
             <div class="flex justify-between items-center px-2">
                 <div>
-                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">ในตะกร้า <span id="cart-count" class="text-blue-600 font-black text-base">0</span></span><br>
+                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">ในตะกร้า <span id="cart-count" class="text-blue-600 font-black text-base">0</span> รายการ</span><br>
                     <span class="font-black text-3xl text-blue-900 tracking-tighter">฿<span id="cart-total">0</span></span>
                 </div>
-                <button onclick="reviewCart()" class="bg-blue-600 text-white px-8 py-3.5 rounded-2xl font-black text-base shadow-lg active:scale-95 transition-transform">ตรวจทาน 📋</button>
+                <button onclick="reviewCart()" class="bg-blue-600 text-white px-10 py-4 rounded-[24px] font-black text-base shadow-xl active:scale-95 transform transition-transform hover:scale-[1.05]">ตรวจทาน 📋</button>
             </div>
         </div>
     </div>
-    
 
-    
-    <div class="modal-overlay hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" id="modal-addon">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+    <div class="modal-overlay hidden fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-5" id="modal-addon">
+        <div class="bg-white rounded-[32px] w-full max-w-sm p-7 shadow-2xl transform transition-all scale-in">
             <h3 class="font-black text-2xl mb-1 text-gray-800" id="addon-name">ชื่อเมนู</h3>
-            <p class="text-blue-600 font-black text-lg mb-4 border-b pb-4">฿<span id="addon-price">0</span></p>
-            <div id="addon-options" class="space-y-3 mb-6 max-h-48 overflow-y-auto"></div>
-            <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl mb-6 border">
-                <span class="text-xs font-bold text-gray-600">จำนวน:</span>
-                <div class="flex items-center gap-3">
-                    <button onclick="adjustQty(-1)" class="w-8 h-8 rounded-lg bg-white border font-bold text-lg active:scale-95">-</button>
-                    <span id="addon-qty" class="font-black text-xl">1</span>
-                    <button onclick="adjustQty(1)" class="w-8 h-8 rounded-lg bg-white border font-bold text-lg active:scale-95">+</button>
+            <p class="text-blue-600 font-black text-xl mb-4 border-b pb-4">฿<span id="addon-price">0</span></p>
+            <div id="addon-options" class="space-y-3 mb-6 max-h-48 overflow-y-auto pr-1"></div>
+            
+            <div class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl mb-6 border shadow-inner">
+                <span class="text-xs font-black text-gray-500 uppercase">จำนวน</span>
+                <div class="flex items-center gap-4">
+                    <button onclick="adjustQty(-1)" class="w-10 h-10 rounded-xl bg-white border-2 border-gray-100 font-black text-xl shadow-sm active:scale-90">-</button>
+                    <span id="addon-qty" class="font-black text-2xl text-blue-900">1</span>
+                    <button onclick="adjustQty(1)" class="w-10 h-10 rounded-xl bg-white border-2 border-gray-100 font-black text-xl shadow-sm active:scale-90">+</button>
                 </div>
             </div>
+
             <div class="flex gap-3">
-                <button onclick="closeModal('modal-addon')" class="flex-1 bg-gray-100 py-3.5 rounded-[20px] font-bold text-gray-500">ยกเลิก</button>
-                <button onclick="confirmAddon()" class="flex-[2] bg-blue-600 text-white py-3.5 rounded-[20px] font-black shadow-lg">ใส่ตะกร้า 🛒</button>
+                <button onclick="closeModal('modal-addon')" class="flex-1 bg-gray-100 py-4 rounded-[20px] font-black text-gray-400 text-sm">ยกเลิก</button>
+                <button onclick="confirmAddon()" class="flex-[2] bg-blue-600 text-white py-4 rounded-[20px] font-black shadow-lg text-sm active:scale-95">ใส่ตะกร้า 🛒</button>
             </div>
         </div>
     </div>
 
-    <div class="modal-overlay hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" id="modal-review">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl flex flex-col max-h-[90vh]">
-            <h2 class="font-black text-xl text-center mb-1">📝 ตรวจสอบออร์เดอร์</h2>
-            <p class="text-sm text-center text-gray-500 font-bold mb-4">โต๊ะ <span id="review-unit" class="font-black text-black text-2xl"></span></p>
+    <div class="modal-overlay hidden fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-5" id="modal-review">
+        <div class="bg-white rounded-[32px] w-full max-w-sm p-7 shadow-2xl flex flex-col max-h-[85vh]">
+            <h2 class="font-black text-xl text-center mb-1 text-gray-800">📝 ตรวจสอบออร์เดอร์</h2>
+            <p class="text-xs text-center text-gray-400 font-bold mb-5 uppercase tracking-widest">โต๊ะ <span id="review-unit" class="text-blue-600 font-black text-2xl">--</span></p>
             
-            <div id="review-list" class="flex-1 overflow-y-auto divide-y border-t border-b py-2 mb-4 font-bold text-gray-700 text-sm">
+            <div id="review-list" class="flex-1 overflow-y-auto divide-y border-t border-b py-3 mb-5 font-bold text-gray-700 text-sm pr-2">
                 </div>
             
-            <div class="text-right mb-4">
-                <span class="text-[10px] text-gray-400 font-bold uppercase">ยอดรวมบิลนี้</span><br>
-                <span class="font-black text-3xl text-blue-900 tracking-tighter">฿<span id="review-total-price">0</span></span>
+            <div class="flex justify-between items-end mb-6">
+                <span class="text-[10px] text-gray-400 font-black uppercase">ยอดรวมสุทธิ</span>
+                <span class="font-black text-4xl text-blue-900 tracking-tighter">฿<span id="review-total-price">0</span></span>
             </div>
+
             <div class="flex gap-3 mt-auto">
-                <button onclick="closeModal('modal-review')" class="flex-1 bg-gray-200 py-4 rounded-[20px] font-black text-gray-600 active:scale-95">แก้ไข</button>
-                <button onclick="sendOrderToMaster()" class="flex-[2] bg-green-500 text-white py-4 rounded-[20px] font-black shadow-lg text-lg active:scale-95">ส่งเข้าครัว 🚀</button>
+                <button onclick="closeModal('modal-review')" class="flex-1 bg-gray-100 py-4 rounded-[20px] font-black text-gray-400 active:scale-95">แก้ไข</button>
+                <button onclick="sendOrderToMaster()" class="flex-[2] bg-green-500 text-white py-4 rounded-[20px] font-black shadow-lg text-lg active:scale-95 transition-all hover:bg-green-600">ส่งเข้าครัว 🚀</button>
             </div>
         </div>
     </div>
-    //** modals close
 
-<div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full font-bold text-sm shadow-xl transition-all duration-300 opacity-0 pointer-events-none z-[1000]"></div>
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-md text-white px-8 py-3.5 rounded-full font-black text-xs shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-[1000] tracking-wider"></div>
 
+    <script src="js/vault.js"></script>
+    <script src="js/client-core.js"></script>
+    <script>
+        // ฟังก์ชันควบคุม UI พื้นฐาน
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translate(-50%, -10px)';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, 0)';
+            }, 3000);
+        }
 
-<script src="js/client-core.js"></script>
-<script>
-    
-    function showToast(msg) {
-        const toast = document.getElementById('toast');
-        toast.innerText = msg;
-        toast.style.opacity = '1';
-        toast.style.bottom = '40px';
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.bottom = '20px';
-        }, 2500);
-    }
+        function openModal(id) {
+            const el = document.getElementById(id);
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+        }
 
-    function closeModal(id) {
-        document.getElementById(id).classList.add('hidden');
-    }
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+        }
 
-    function switchTab(tabId) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-        document.getElementById('screen-' + tabId).classList.remove('hidden');
-        window.scrollTo(0,0);
-    }
-    
-    function backToTables() {
-        switchTab('tables');
-    }
-</script>
-
+        function switchTab(tabId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            const target = document.getElementById('screen-' + tabId);
+            if (target) target.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+        
+        function backToTables() {
+            switchTab('tables');
+        }
+    </script>
 
 </div>
 </body>
