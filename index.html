@@ -31,8 +31,11 @@
                 <img id="shop-logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjYmJiYmJiIi8+PC9zdmc+" class="w-full h-full object-cover rounded-[14px] border-2 border-white shadow-sm bg-white">
             </div>
             <div class="flex flex-col">
-                <h1 id="display-shop-name" class="font-black text-xl leading-none text-white drop-shadow-md truncate max-w-[100px]">FAKDU</h1>
-                <span class="text-[10px] font-bold text-white/80">เครื่องแม่ (Master)</span>
+                <h1 id="display-shop-name" class="font-black text-xl leading-none text-white drop-shadow-md truncate max-w-[100px] mb-1">FAKDU</h1>
+                <button id="btn-manual-sync" onclick="triggerSyncCheck(this)" class="flex items-center gap-1.5 bg-white text-blue-600 px-2 py-0.5 rounded-full text-[9px] font-black shadow-sm active:scale-95 transition-all duration-300 w-fit">
+                    <div class="w-3.5 h-3.5 bg-gray-200 rounded-full flex items-center justify-center text-[7px] overflow-hidden" id="client-avatar-sync">👤</div>
+                    <span>เช็คข้อมูลลูก</span>
+                </button>
             </div>
         </div>
         
