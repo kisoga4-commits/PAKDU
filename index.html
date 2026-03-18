@@ -3,170 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>FAKDU v9.22 - Cloud Sync PRO</title>
+    <meta name="theme-color" content="#800000">
+    <title>FAKDU v9.30 PRO - Master Node</title>
+    
+    //* assets open
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-        :root { --primary: #800000; --bg: #f8fafc; }
-        body { font-family: 'Prompt', sans-serif; background-color: var(--bg); display: flex; justify-content: center; height: 100dvh; margin: 0; user-select: none; overflow: hidden; }
-        .app-container { width: 100%; max-width: 480px; background-color: var(--bg); height: 100dvh; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 60px rgba(0,0,0,0.4); }
-        .screen { flex: 1; overflow-y: auto; padding-bottom: 120px; }
-        .glass-header { background: var(--primary); color: white; position: sticky; top: 0; z-index: 50; height: 100px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-        .item-btn { background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 12px; display: flex; align-items: center; gap: 14px; cursor: pointer; margin-bottom: 10px; }
-        .item-img { width: 65px; height: 65px; border-radius: 14px; object-fit: cover; background: #eee; }
-        .theme-text { color: var(--primary) !important; }
-        .theme-bg { background-color: var(--primary) !important; color: white !important; }
-        #toast { visibility: hidden; min-width: 250px; background: #1e293b; color: #fff; text-align: center; border-radius: 16px; padding: 14px; position: fixed; z-index: 10000; left: 50%; bottom: 40px; transform: translateX(-50%); font-weight: 800; }
-        #toast.show { visibility: visible; animation: fadein 0.4s; }
-        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 40px; opacity: 1; } }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        .modal-content { background: white; padding: 24px; border-radius: 32px; width: 92%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
-    </style>
+    <link rel="stylesheet" href="style.css"> //** assets close
 </head>
-<body oncontextmenu="return false;">
+<body>
 
 <div class="app-container">
-    <div class="glass-header">
-        <div class="flex items-center gap-3">
-            <img id="shop-logo" src="https://via.placeholder.com/50" class="w-[50px] h-[50px] rounded-xl bg-white border-2 border-white">
-            <h1 id="display-shop-name" class="font-black text-white text-xl">FAKDU</h1>
+    
+    //* header-status open
+    <div id="pwa-install-banner" class="hidden bg-blue-600 text-white w-full px-4 py-3 flex justify-between items-center shadow-md z-[100]">
+        <div class="flex items-center gap-2">
+            <span class="text-2xl">📲</span><span class="text-xs font-bold leading-tight">ติดตั้งแอป FAKDU<br>ทำงานออฟไลน์ 100%</span>
         </div>
-        <div id="trial-badge" class="bg-yellow-400 text-black px-4 py-1 rounded-full text-[12px] font-black animate-pulse">รุ่นทดลอง</div>
+        <button onclick="installPWA()" class="bg-white text-blue-600 px-4 py-1.5 rounded-full font-black text-xs shadow-sm active:scale-95">ติดตั้งเลย</button>
     </div>
 
-    <div id="screen-customer" class="screen active p-5">
-        <div id="grid-units" class="grid grid-cols-2 gap-4"></div>
-    </div>
-
-    <div id="screen-order" class="screen hidden bg-gray-50 p-4">
-        <button onclick="switchTab('customer')" class="mb-4 font-black text-gray-400">← กลับ</button>
-        <h2 class="text-2xl font-black mb-4 theme-text">โต๊ะ <span id="active-unit-id">0</span></h2>
-        <div id="item-list" class="space-y-3"></div>
-        <div class="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-white p-5 shadow-2xl rounded-t-[30px] flex justify-between items-center">
-            <div>
-                <p class="text-[10px] font-bold text-gray-400 uppercase">ยอดรวม</p>
-                <p class="text-3xl font-black theme-text">฿<span id="cart-total">0</span></p>
+    <div class="glass-header relative flex justify-between items-center w-full">
+        <div class="flex items-center gap-3 w-[35%] z-10">
+            <div class="relative w-[55px] h-[55px] flex-shrink-0">
+                <div id="online-status-dot" class="absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full border-2 border-white bg-green-500 shadow-sm z-20" title="Online"></div>
+                <img id="shop-logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjYmJiYmJiIi8+PC9zdmc+" class="w-full h-full object-cover rounded-[14px] border-2 border-white shadow-sm bg-white">
             </div>
-            <button onclick="confirmOrder()" class="theme-bg px-10 py-4 rounded-2xl font-black shadow-lg">ส่งออร์เดอร์ 🚀</button>
+            <div class="flex flex-col">
+                <h1 id="display-shop-name" class="font-black text-xl leading-none text-white drop-shadow-md truncate max-w-[100px]">FAKDU</h1>
+                <span class="text-[10px] font-bold text-white/80">เครื่องแม่ (Master)</span>
+            </div>
+        </div>
+        
+        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center">
+            <div id="trial-badge" class="bg-yellow-400 text-black px-5 py-1.5 rounded-full text-[13px] font-black cursor-pointer shadow-lg animate-pulse" onclick="openProModal()">รุ่นทดลอง</div>
+        </div>
+        
+        <div class="flex items-center justify-end w-[35%] gap-2 relative h-full pt-2 z-10 pr-2">
+            <div id="spy-bell" class="hidden text-xl cursor-pointer bg-red-500 p-2 rounded-full shadow-lg animate-bounce" onclick="alert('มีการกระทำผิดปกติในระบบ!')">🔔</div>
+            <span class="absolute bottom-1 right-2 text-[9px] font-black text-white/70 tracking-wider">v9.30</span>
         </div>
     </div>
-</div>
+    //** header-status close
+
+    //* navigation open
+    <div class="top-nav">
+        <div id="tab-customer" class="nav-tab active" onclick="switchTab('customer', this)">👨‍👩‍👦 ลูกค้า</div>
+        <div id="tab-shop" class="nav-tab" onclick="switchTab('shop', this)">🧾 เช็คบิล</div>
+        <div id="tab-manage" class="nav-tab" onclick="attemptAdmin('manage', this)">📊 หลังร้าน</div>
+        <div id="tab-system" class="nav-tab" onclick="attemptAdmin('system', this)">⚙️ ระบบ</div>
+    </div>
+    //** navigation close
+
+    <div id="screen-customer" class="screen active p-5 pt-4">...</div>
+    <div id="screen-order" class="screen hidden bg-gray-50 p-4">...</div>
+    <div id="screen-shop" class="screen hidden p-5 pt-8">...</div>
+    <div id="screen-manage" class="screen hidden p-5">...</div>
+
+    //* system-settings open
+    <div id="screen-system" class="screen hidden p-5">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="font-black text-3xl text-gray-800">ตั้งค่าระบบ</h2>
+            <button onclick="adminLogout()" class="bg-red-50 text-red-600 border border-red-100 px-5 py-2 rounded-full font-black text-[11px] active:scale-95">🔒 ล็อคแอดมิน</button>
+        </div>
+
+        <div id="pro-recovery-setup" class="bg-red-50 border-2 border-red-200 p-6 rounded-[28px] mb-6 shadow-sm hidden">
+            <h3 class="font-black text-red-700 text-sm mb-2">🛡️ ตั้งค่าป้องกันลืมรหัส (PRO)</h3>
+            <p class="text-[10px] text-red-500 font-bold mb-4">หากลืม PIN ข้อมูล 3 อย่างนี้จะช่วยกู้คืนรหัสให้คุณได้แบบ Offline</p>
+            <input type="tel" id="setup-rec-phone" placeholder="1. เบอร์โทรศัพท์" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-white outline-none mb-2 focus:border-red-400">
+            <input type="text" id="setup-rec-color" placeholder="2. สีที่ชอบ" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-white outline-none mb-2 focus:border-red-400">
+            <input type="text" id="setup-rec-animal" placeholder="3. สัตว์ที่อยากเป็น" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-white outline-none mb-4 focus:border-red-400">
+            <button onclick="saveRecoveryData()" class="w-full bg-red-600 text-white py-3 rounded-xl font-black text-xs active:scale-95 shadow-md">💾 บันทึกข้อมูลกู้คืน</button>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-100 p-6 rounded-[28px] mb-6 shadow-sm">
+            <h3 class="font-black text-blue-800 text-sm mb-3">☁️ เชื่อมต่อเครื่องลูก (Client)</h3>
+            <div class="flex gap-3 items-center bg-white p-3 rounded-2xl border border-blue-200 shadow-inner mb-4">
+                <div id="sync-qr-area" class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center">QR</div>
+                <div class="flex-1 text-center">
+                    <p class="text-[9px] text-blue-500 font-bold uppercase mb-1">ให้เครื่องลูกสแกน QR นี้</p>
+                    <div id="display-sync-key" class="text-3xl font-mono text-blue-900 font-black tracking-[8px]">PIN</div>
+                </div>
+            </div>
+            <button onclick="requestNewSyncKey()" class="w-full bg-white text-blue-600 border border-blue-200 py-3 rounded-xl font-black text-xs active:scale-95">🔄 ขอรหัสใหม่ (เตะเครื่องลูกเก่า)</button>
+        </div>
+
+        <div class="bg-white p-6 rounded-[28px] border shadow-sm mb-6">
+            <h3 class="font-black text-gray-800 text-sm mb-4">ข้อมูลร้านค้า</h3>
+            <button onclick="saveSystemSettings()" class="w-full theme-bg py-4 rounded-[22px] font-black text-lg shadow-lg mt-6 active:scale-95">💾 บันทึกการตั้งค่า</button>
+        </div>
+    </div>
+    //** system-settings close
+
+    //* modals open
+    <div class="modal-overlay" id="modal-admin-pin">
+        <div class="modal-content text-center">
+            <h3 class="font-black text-3xl mb-1 text-gray-800">SECURITY PIN</h3>
+            <p class="text-[11px] text-gray-400 mb-6 font-bold uppercase" id="admin-pin-desc">รหัสผ่านเพื่อเข้าระบบ</p>
+            <input type="password" id="admin-pin-input" class="w-full border-2 border-gray-200 p-5 rounded-[24px] text-center text-5xl font-black mb-4 outline-none bg-gray-50 tracking-[12px] focus:border-primary">
+            <div class="flex gap-4 mb-4">
+                <button onclick="closeModal('modal-admin-pin')" class="flex-1 bg-gray-100 py-4 rounded-[20px] font-black text-gray-500 text-lg">ยกเลิก</button>
+                <button onclick="verifyAdminPin()" class="flex-[2] theme-bg py-4 rounded-[20px] font-black shadow-lg text-lg">ยืนยัน</button>
+            </div>
+            <button onclick="openRecoveryModal()" class="text-red-500 text-[12px] font-bold underline p-2 active:scale-95">ลืมรหัสผ่าน?</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-recovery">
+        <div class="modal-content text-center border-t-4 border-red-500">
+            <h3 class="font-black text-2xl mb-1 text-red-600">กู้คืนรหัสผ่าน</h3>
+            <p class="text-[11px] text-gray-500 mb-5 font-bold uppercase">ตอบคำถามลับ 3 ข้อให้ถูกต้อง 100%</p>
+            
+            <input type="tel" id="rec-ans-phone" placeholder="1. เบอร์โทรศัพท์" class="w-full border-2 p-4 rounded-xl mb-3 text-center font-bold text-gray-700 outline-none focus:border-red-500">
+            <input type="text" id="rec-ans-color" placeholder="2. สีที่ชอบ" class="w-full border-2 p-4 rounded-xl mb-3 text-center font-bold text-gray-700 outline-none focus:border-red-500">
+            <input type="text" id="rec-ans-animal" placeholder="3. สัตว์ที่อยากเป็น" class="w-full border-2 p-4 rounded-xl mb-6 text-center font-bold text-gray-700 outline-none focus:border-red-500">
+            
+            <div class="flex gap-3">
+                <button onclick="closeModal('modal-recovery'); attemptAdmin('system');" class="flex-1 bg-gray-100 py-4 rounded-[18px] font-black text-gray-500 text-sm">กลับ</button>
+                <button onclick="executeRecovery()" class="flex-[2] bg-red-600 text-white py-4 rounded-[18px] font-black shadow-lg text-lg">ขุดรหัส ⛏️</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-pro-unlock">...</div>
+    //** modals close
 
 <div id="toast"></div>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
+//* scripts open
+<script src="js/vault.js"></script>
+<script src="js/core.js"></script>
 <script>
-// ### 2. ENGINE 9.22 (แก้ชื่อซ้ำและ Backtick) ###
-var db = {
-    shopName: "FAKDU SHOP",
-    syncKey: "G9X2W1", // ปรับให้ตรงกับ Cloud ของป๋า
-    items: [
-        {id: 1, name: "ข้าวกะเพราหมูสับ", price: 50, img: "https://img.freepik.com/free-photo/stir-fried-pork-basil-with-fried-egg-rice_1150-35322.jpg"},
-        {id: 2, name: "ผัดไทยกุ้งสด", price: 65, img: "https://img.freepik.com/free-photo/pad-thai-white-plate_1150-11054.jpg"}
-    ],
-    units: []
-};
-var cart = [];
-var activeUnitId = null;
-
-var firebaseConfig = {
-    apiKey: "AIzaSyC4jOmVcZp0HmmDqZCmHufnq2yyoPcvyVM",
-    authDomain: "pakdu-a26c4.firebaseapp.com",
-    databaseURL: "https://pakdu-a26c4-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "pakdu-a26c4",
-    storageBucket: "pakdu-a26c4.firebasestorage.app",
-    messagingSenderId: "414809008203",
-    appId: "1:414809008203:web:757dceafa78d91900d85ce"
-};
-
-// ### 3. ฟังก์ชันแก้จุดตาย (Backtick ` ) ###
-function renderItemList() {
-    const box = document.getElementById('item-list');
-    box.innerHTML = '';
-    db.items.forEach(i => {
-        // ใช้เครื่องหมาย ` (ใต้ปุ่ม Esc) แก้ปัญหา 404
-        box.innerHTML += `
-            <div class="item-btn" onclick="addToCart(${i.id})">
-                <img src="${i.img}" class="item-img" onerror="this.src='https://via.placeholder.com/65?text=Food'">
-                <div class="flex-1 text-left">
-                    <div class="font-black text-gray-800 text-lg">${i.name}</div>
-                    <div class="theme-text font-black">฿${i.price}</div>
-                </div>
-                <div class="text-3xl text-gray-300 font-black">+</div>
-            </div>`;
-    });
-}
-
-function renderCustomerGrid() {
-    const grid = document.getElementById('grid-units');
-    grid.innerHTML = '';
-    for(let i=1; i<=8; i++) {
-        grid.innerHTML += `<div class="unit-card border-2 p-10 rounded-3xl flex items-center justify-center bg-white" onclick="openOrder(${i})">
-            <span class="text-4xl font-black text-gray-300">${i}</span>
-        </div>`;
-    }
-}
-
-function openOrder(id) {
-    activeUnitId = id; cart = [];
-    document.getElementById('active-unit-id').innerText = id;
-    renderItemList(); updateCartUI(); switchTab('order');
-}
-
-function addToCart(id) {
-    const item = db.items.find(x => x.id === id);
-    cart.push(item); updateCartUI();
-    showToast(`เพิ่ม ${item.name} แล้ว`);
-}
-
-function updateCartUI() {
-    const total = cart.reduce((s, i) => s + i.price, 0);
-    document.getElementById('cart-total').innerText = total.toLocaleString();
-}
-
-function confirmOrder() {
-    if(cart.length === 0) return showToast("ตะกร้าว่าง!", "error");
-    showToast("🚀 ส่งออร์เดอร์สำเร็จ!", "success");
-    setTimeout(() => switchTab('customer'), 1000);
-}
-
-// ### 4. ระบบล้างแคชอัตโนมัติ (Force Update) ###
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then((reg) => {
-            reg.onupdatefound = () => {
-                const installingWorker = reg.installing;
-                installingWorker.onstatechange = () => {
-                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        console.log('🚀 พบเวอร์ชันใหม่! กำลังอัปเดต...');
-                        location.reload(); 
-                    }
-                };
-            };
+    // PWA Init เท่านั้นที่เหลืออยู่ในไฟล์นี้
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Error:', err));
         });
-    });
-}
-
-// Helpers
-function switchTab(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-    document.getElementById(`screen-${id}`).classList.remove('hidden');
-}
-function showToast(m, type='success') {
-    const el = document.getElementById("toast");
-    el.innerText = m; el.className = "show";
-    el.style.background = type === 'error' ? '#ef4444' : '#1e293b';
-    setTimeout(() => el.className = "", 2500);
-}
-
-window.onload = () => {
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    renderCustomerGrid();
-};
+    }
 </script>
+//** scripts close
+
+</div>
 </body>
 </html>
