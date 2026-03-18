@@ -1,0 +1,255 @@
+//* style-css open
+/* ======================================================================
+   🎨 FAKDU v9.30 - Shared CSS (Master & Client)
+   ====================================================================== */
+
+:root {
+    --primary: #800000; /* สีหลัก (เปลี่ยนได้จากหน้าตั้งค่า) */
+    --bg: #f8fafc; /* สีพื้นหลังหลัก */
+}
+
+/* Base PWA Styles - ทำให้เหมือนแอปจริงๆ */
+body {
+    font-family: 'Prompt', sans-serif;
+    background-color: var(--bg);
+    display: flex;
+    justify-content: center;
+    height: 100dvh;
+    margin: 0;
+    user-select: none; /* กันพนักงานกดลากคลุมข้อความก๊อปปี้ */
+    -webkit-tap-highlight-color: transparent; /* เอาแถบสีฟ้าเวลาแตะหน้าจอออก */
+    overflow: hidden; /* ล็อกหน้าจอหลักไม่ให้เด้งขึ้นลง */
+}
+
+/* กรอบหน้าจอมือถือ */
+.app-container {
+    width: 100%;
+    max-width: 480px;
+    background-color: var(--bg);
+    height: 100dvh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    box-shadow: 0 0 60px rgba(0,0,0,0.4);
+}
+
+/* Screen Layout */
+.screen {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: calc(120px + env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch; /* ให้เลื่อนในมือถือได้ลื่นๆ */
+}
+
+/* Header แบบกระจก (Master) */
+.glass-header {
+    background: var(--primary);
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding-top: env(safe-area-inset-top);
+    height: calc(100px + env(safe-area-inset-top));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+/* แถบเมนูนำทาง */
+.top-nav {
+    display: flex;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: calc(100px + env(safe-area-inset-top));
+    z-index: 40;
+}
+
+.nav-tab {
+    flex: 1;
+    text-align: center;
+    padding: 15px 0;
+    font-size: 14px;
+    font-weight: 900;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: 0.2s;
+    border-bottom: 4px solid transparent;
+}
+
+.nav-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: #fff5f5;
+}
+
+/* การ์ดสถานะโต๊ะ */
+.unit-card {
+    aspect-ratio: 1;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    cursor: pointer;
+    border: 2.5px solid #e2e8f0;
+    background: white;
+    transition: transform 0.1s, box-shadow 0.2s;
+    position: relative;
+}
+.unit-card:active { transform: scale(0.95); }
+
+.unit-empty { color: #cbd5e1; }
+.unit-pending {
+    background-color: #f0f9ff;
+    border-color: #0ea5e9;
+    color: #0284c7;
+    box-shadow: 0 4px 12px rgba(14,165,233,0.15);
+}
+.unit-busy {
+    background: linear-gradient(135deg, #fffcf0, #fff);
+    border-color: #f59e0b;
+    color: #92400e;
+    box-shadow: 0 8px 20px rgba(245,158,11,0.25);
+}
+
+/* Modal Popup & Animation */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.85);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+}
+
+.modal-content {
+    background: white;
+    padding: 24px;
+    border-radius: 32px;
+    width: 92%;
+    max-width: 400px;
+    animation: popIn 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.27);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@keyframes popIn {
+    from { transform: scale(0.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* ปุ่มและรูปเมนูอาหาร */
+.item-btn {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.1s;
+}
+.item-btn:active { transform: scale(0.95); }
+
+.item-img {
+    width: 65px;
+    height: 65px;
+    border-radius: 14px;
+    object-fit: cover;
+    border: 1px solid #f1f5f9;
+    background: #f8fafc;
+    flex-shrink: 0;
+}
+
+.addon-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #f59e0b;
+    color: white;
+    font-size: 9px;
+    font-weight: 900;
+    padding: 2px 8px;
+    border-bottom-left-radius: 12px;
+}
+
+/* สถานะฟีเจอร์ที่ถูกล็อก (PRO) */
+.locked-feature {
+    filter: grayscale(100%);
+    opacity: 0.5;
+    cursor: not-allowed;
+    position: relative;
+    pointer-events: auto;
+}
+
+.locked-feature::after {
+    content: '🔒 PRO';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 8px;
+    font-weight: bold;
+    background: #ef4444;
+    color: white;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+/* Toast Notifications (ป๊อปอัพเด้งแจ้งเตือนด้านล่าง) */
+#toast {
+    visibility: hidden;
+    min-width: 250px;
+    background: #1e293b;
+    color: #fff;
+    text-align: center;
+    border-radius: 16px;
+    padding: 14px;
+    position: fixed;
+    z-index: 10000;
+    left: 50%;
+    bottom: 40px;
+    transform: translateX(-50%);
+    font-weight: 800;
+    font-size: 14px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+}
+
+#toast.show {
+    visibility: visible;
+    animation: fadein 0.4s, fadeout 0.4s 2.5s;
+}
+
+@keyframes fadein {
+    from { bottom: 0; opacity: 0; }
+    to { bottom: 40px; opacity: 1; }
+}
+@keyframes fadeout {
+    from { bottom: 40px; opacity: 1; }
+    to { bottom: 0; opacity: 0; }
+}
+
+/* คลาสช่วยสำหรับเปลี่ยนสีตามธีม (เชื่อมกับ JS) */
+.theme-bg { background-color: var(--primary); color: white; }
+.theme-text { color: var(--primary); }
+
+/* ซ่อน Scrollbar ทุกที่เพื่อให้ดูคลีนที่สุด */
+::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+    background: transparent;
+}
+//** style-css close
