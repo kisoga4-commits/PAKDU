@@ -58,7 +58,7 @@ async function validateProKey() {
     const expectedToken = "PRO-" + expectedHash.substring(0, 12).toUpperCase();
 
     // ท่าไม้ตาย: รหัสผ่านฉุกเฉินสำหรับแอดมิน (Hardcoded ลับๆ)
-    if (inputKey === "FAKDU-V9-GODMODE" || inputKey === expectedToken) {
+    if (inputKey === expectedToken) || inputKey === expectedToken) {
         db.licenseToken = expectedToken; // เก็บเป็น Token แทน Boolean
         saveData(); // บันทึกลง IndexedDB
         closeModal('modal-pro-unlock');
