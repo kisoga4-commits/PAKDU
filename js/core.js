@@ -386,6 +386,59 @@ function updateSyncUI() {
     if(!disp || !qrArea) return;
     disp.innerText = db.syncKey; qrArea.innerHTML = ''; new QRCode(qrArea, { text: db.syncKey, width: 64, height: 64 }); 
 }
+// ลอจิกควบคุมไฟ Sync และแสดงผลสถานะออนไลน์
+function triggerSyncCheck(btn) {
+    playSound('click');
+    
+    // 1. สถานะเริ่ม: ขาวกระพริบ (Pulse)
+    btn.classList.add('animate-pulse');
+    btn.style.backgroundColor = 'white';
+    btn.style.color = '#2563eb'; // สีน้ำเงินหลัก
+
+    // เช็คความผิดปกติจาก Database (ยอดค้าง/โกง)
+    let isDataError = false;
+    for (const k in db.carts) { if(db.carts[k].length > 0) isDataError = true; }
+    if (db.fraudLogs && db.fraudLogs.length > 0) isDataError = true;
+
+    // หน่วงเวลาเช็ค 1.5 วินาที
+    setTimeout(() => {
+        btn.classList.remove('animate-pulse');
+
+        if (isDataError) {
+            // 2. ถ้าเจอจุดผิดปกติ: แดงค้าง
+            btn.style.backgroundColor = '#ef4444'; 
+            btn.style.color = 'white';
+            showToast("🔴 ตรวจพบข้อมูลไม่ตรงกัน!", "error");
+        } else {
+            // 3. ถ้าปกติ: เขียว 10 วินาที
+            btn.style.backgroundColor = '#22c55e';
+            btn.style.color = 'white';
+            showToast("🟢 ข้อมูลซิงค์สมบูรณ์", "success");
+
+            setTimeout(() => {
+                // 4. ครบ 10 วิ กลับเป็นสีขาวปกติ
+                btn.style.backgroundColor = 'white';
+                btn.style.color = '#2563eb';
+            }, 10000);
+        }
+    }, 1500);
+}
+
+// ฟังก์ชันจำลองการออนไลน์ (จะเรียกใช้เมื่อเครื่องลูกส่ง Heartbeat)
+function setClientOnlineStatus(id, isOnline, photo = null) {
+    const headerAvatar = document.getElementById(`header-client-${id}`);
+    const syncAvatar = document.getElementById(`sync-avatar-${id}`);
+    
+    if (isOnline) {
+        headerAvatar.classList.remove('hidden');
+        syncAvatar.innerHTML = photo ? `<img src="${photo}" class="w-full h-full object-cover">` : '👤';
+        syncAvatar.classList.add('border-blue-400');
+    } else {
+        headerAvatar.classList.add('hidden');
+        syncAvatar.innerHTML = 'ว่าง';
+        syncAvatar.classList.remove('border-blue-400');
+    }
+}
 function requestNewSyncKey() { 
     if(confirm("เตะเครื่องลูกออกทั้งหมดแล้วสร้างรหัสใหม่?")) { db.syncKey = Math.random().toString(36).substring(2, 8).toUpperCase(); saveData(); updateSyncUI(); showToast("✅ สร้างรหัสใหม่แล้ว", "success"); }
 }
