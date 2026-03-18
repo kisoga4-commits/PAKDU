@@ -1120,10 +1120,17 @@ window.addEventListener('DOMContentLoaded', initApp);
         });
     }
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    <script>
-        const firebaseConfig = {
+<script>
+    // 2. ก้อนฟังก์ชันพื้นฐาน (เช็คคีย์บอร์ด + สร้างไอดีเครื่อง)
+    function ds(e) { if(e.keyCode==123||(e.ctrlKey&&e.shiftKey&&(e.keyCode==73||e.keyCode==74))||(e.ctrlKey&&e.keyCode==85)) return false; }
+    function getFingerprint() { try { const c=document.createElement('canvas'); const x=c.getContext('2d'); x.fillText("FK-7", 2, 10); let h=0, b=c.toDataURL(); for(let i=0;i<b.length;i++) h=((h<<5)-h)+b.charCodeAt(i); return "TB-"+Math.abs(h).toString(16).toUpperCase().substring(0,6); } catch(e) { return "TB-XXXX"; } }
+    function procImgRule(k) { let m = getFingerprint() + "FAKDU_MASTER_V7_2026_TOPSECRET"; let h = 0; for(let i=0;i<m.length;i++){ h=((h<<5)-h)+m.charCodeAt(i); h=h&h; } let hx = Math.abs(h).toString(16).toUpperCase().padStart(8,'0'); return k === `FK7-${hx.substring(0,4)}-${hx.substring(4,8)}`; }
+
+    // 3. ตั้งค่าเชื่อมต่อ Cloud (ใช้ var เพื่อกัน Error ซ้ำ)
+    if (typeof firebaseConfig === 'undefined') {
+        var firebaseConfig = {
             apiKey: "AIzaSyC4jOmVcZp0HmmDqZCmHufnq2yyoPcvyVM",
             authDomain: "pakdu-a26c4.firebaseapp.com",
             databaseURL: "https://pakdu-a26c4-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -1132,11 +1139,14 @@ window.addEventListener('DOMContentLoaded', initApp);
             messagingSenderId: "414809008203",
             appId: "1:414809008203:web:757dceafa78d91900d85ce"
         };
+    }
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-    </script>
+    // 4. เริ่มรันระบบ
+    if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+        console.log("✅ ระบบ FAKDU V9.21: เชื่อมต่อสำเร็จ!");
+    }
+</script>
 
 </body>
 </html>
