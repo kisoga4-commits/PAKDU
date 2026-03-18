@@ -64,7 +64,7 @@
     <div id="screen-manage" class="screen hidden p-5">...</div>
 
    
-    <div id="screen-system" class="screen hidden p-5">
+   <div id="screen-system" class="screen hidden p-5">
         <div class="flex justify-between items-center mb-6">
             <h2 class="font-black text-3xl text-gray-800">ตั้งค่าระบบ</h2>
             <button onclick="adminLogout()" class="bg-red-50 text-red-600 border border-red-100 px-5 py-2 rounded-full font-black text-[11px] active:scale-95">🔒 ล็อคแอดมิน</button>
@@ -92,8 +92,39 @@
         </div>
 
         <div class="bg-white p-6 rounded-[28px] border shadow-sm mb-6">
-            <h3 class="font-black text-gray-800 text-sm mb-4">ข้อมูลร้านค้า</h3>
-            <button onclick="saveSystemSettings()" class="w-full theme-bg py-4 rounded-[22px] font-black text-lg shadow-lg mt-6 active:scale-95">💾 บันทึกการตั้งค่า</button>
+            <label class="text-[12px] text-gray-400 font-bold uppercase tracking-widest mb-4 block">ข้อมูลร้านค้า</label>
+            <div class="flex items-center gap-5 mb-6">
+                <div class="relative w-[90px] h-[90px] bg-gray-50 border-2 border-dashed border-gray-300 rounded-[24px] flex items-center justify-center overflow-hidden shrink-0 cursor-pointer" onclick="document.getElementById('upload-logo').click()">
+                    <span class="text-[10px] font-bold text-gray-400 text-center">เปลี่ยน<br>โลโก้</span>
+                    <input type="file" id="upload-logo" accept="image/*" class="hidden" onchange="handleImage(event, 'logo')">
+                </div>
+                <div class="flex-1 space-y-3">
+                    <input id="sys-shop-name" type="text" placeholder="ชื่อร้านค้า" class="w-full border-2 p-3.5 rounded-2xl font-bold text-base bg-gray-50 outline-none focus:border-primary">
+                    <div class="flex gap-2">
+                        <div class="flex-1 flex items-center gap-2 bg-gray-50 p-2 rounded-xl border-2"><span class="text-[9px] text-gray-400 font-bold uppercase">ธีม</span><input id="sys-theme" type="color" class="w-full h-8 cursor-pointer bg-transparent border-0"></div>
+                        <div class="flex-1 flex items-center gap-2 bg-gray-50 p-2 rounded-xl border-2"><span class="text-[9px] text-gray-400 font-bold uppercase">พื้นหลัง</span><input id="sys-bg" type="color" class="w-full h-8 cursor-pointer bg-transparent border-0"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div><label class="text-[10px] text-gray-400 font-bold mb-1 block uppercase">ธนาคาร</label><input id="sys-bank" type="text" placeholder="กสิกรไทย" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-gray-50 outline-none"></div>
+                <div><label class="text-[10px] text-gray-400 font-bold mb-1 block uppercase">พร้อมเพย์</label><input id="sys-ppay" type="text" placeholder="เบอร์โทร/บัตร" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-gray-50 outline-none"></div>
+            </div>
+            <label class="text-[10px] text-gray-400 font-bold mb-2 block uppercase">รูป QR รับเงิน (สำหรับ Offline)</label>
+            <input type="file" accept="image/*" class="w-full border-2 p-2 rounded-xl text-xs font-bold mb-6 bg-gray-50" onchange="handleImage(event, 'qr')">
+            
+            <div class="border-t pt-6 mt-2">
+                <label class="text-[10px] font-bold text-red-500 mb-2 block uppercase">เปลี่ยนรหัส Admin PIN</label>
+                <input id="sys-pin" type="text" class="w-full border-2 p-4 rounded-xl text-xl font-black tracking-widest bg-red-50 text-red-700 outline-none border-red-200 text-center">
+            </div>
+            <button onclick="saveSystemSettings()" class="w-full theme-bg py-4 rounded-[22px] font-black text-lg shadow-lg mt-6 active:scale-95 transition-transform">💾 บันทึกการตั้งค่า</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-8">
+            <button onclick="exportBackup()" class="bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-sm text-xs active:scale-95">📥 Backup DB</button>
+            <div class="relative bg-gray-200 text-gray-700 py-4 rounded-2xl font-black shadow-sm text-xs text-center flex items-center justify-center cursor-pointer active:scale-95">
+                📤 Restore DB <input type="file" accept=".json" class="absolute inset-0 opacity-0 cursor-pointer" onchange="importBackup(event)">
+            </div>
         </div>
     </div>
    
