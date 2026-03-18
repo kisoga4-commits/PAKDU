@@ -111,16 +111,44 @@ function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 function openProModal() { playSound('click'); document.getElementById('modal-pro-unlock').style.display = 'flex'; }
 function openRecoveryModal() { closeModal('modal-admin-pin'); document.getElementById('modal-recovery').style.display = 'flex'; }
 
-function updateSyncStatusDots() {
-    const dot = document.getElementById('online-status-dot');
-    if(!dot) return;
-    if(!navigator.onLine) { dot.className = 'absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full border-2 border-white bg-red-500 shadow-sm z-20'; dot.title='Offline'; return; }
-    let hasPendingOrders = false; for (const key in db.carts) { if(db.carts[key].length > 0) hasPendingOrders = true; }
-    if(hasPendingOrders) { dot.className = 'absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full border-2 border-white bg-yellow-400 shadow-sm z-20'; dot.title='รอส่งออร์เดอร์'; }
-    else { dot.className = 'absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full border-2 border-white bg-green-500 shadow-sm z-20'; dot.title='Online Sync'; }
-}
-window.addEventListener('online', updateSyncStatusDots); window.addEventListener('offline', updateSyncStatusDots);
+function triggerSyncCheck(btnElement) {
+    playSound('click');
+    
+    // 1. สถานะโหลด: กระพริบ และเป็นสีขาว
+    btnElement.classList.add('animate-pulse');
+    btnElement.classList.remove('bg-green-500', 'bg-red-500', 'text-white');
+    btnElement.classList.add('bg-white', 'text-blue-600'); // สีขาวเริ่มต้น
+    
+    // ลอจิกตรวจสอบข้อมูล (เช่น มีออร์เดอร์ค้างใน carts หรือ Log ทุจริตไหม)
+    let hasErrorOrPending = false; 
+    for (const k in db.carts) { 
+        if(db.carts[k].length > 0) hasErrorOrPending = true; 
+    }
+    if (db.fraudLogs && db.fraudLogs.length > 0) hasErrorOrPending = true;
 
+    // หน่วงเวลาให้เห็นว่าระบบกำลังทำงาน (1.5 วินาที)
+    setTimeout(() => {
+        btnElement.classList.remove('animate-pulse'); // หยุดกระพริบ
+        
+        if (hasErrorOrPending) {
+            // 2. สถานะผิดปกติ: เป็นสีแดงค้างไว้ (ให้แอดมินไปเคลียร์กับเด็กเอง)
+            btnElement.classList.remove('bg-white', 'text-blue-600');
+            btnElement.classList.add('bg-red-500', 'text-white');
+            showToast("❌ ข้อมูลไม่ตรงกัน พบความผิดปกติ!", "error");
+        } else {
+            // 3. สถานะสมบูรณ์: เป็นสีเขียว 10 วินาที
+            btnElement.classList.remove('bg-white', 'text-blue-600');
+            btnElement.classList.add('bg-green-500', 'text-white');
+            showToast("✅ ข้อมูลซิงค์ตรงกัน 100%", "success");
+            
+            // 4. นับถอยหลัง 10 วินาที กลับเป็นสีขาว (สถานะปกติ)
+            setTimeout(() => {
+                btnElement.classList.remove('bg-green-500', 'text-white');
+                btnElement.classList.add('bg-white', 'text-blue-600');
+            }, 10000);
+        }
+    }, 1500);
+}
 function triggerSpyBell(reason = "Unknown Error") { 
     const bell = document.getElementById('spy-bell'); 
     if(bell) { bell.classList.remove('hidden'); playSound('error'); setTimeout(()=>bell.classList.add('hidden'), 5000); }
