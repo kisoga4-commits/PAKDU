@@ -1,12 +1,6 @@
-const CACHE_NAME = 'FAKDU-V9.22'; // เปลี่ยนเลขตรงนี้ทุกครั้งที่อัปเดต!
-const assets = [
-  '/',
-  '/index.html',
-  '/client.html',
-  // รายการไฟล์อื่นๆ ของป๋า
-];
+const CACHE_NAME = 'FAKDU-V9.22'; // ขยับเลขตรงนี้เพื่อล้างแคชลูกค้า
+const assets = ['/', '/index.html', '/client.html'];
 
-// 1. ตอนติดตั้ง: สั่งให้ข้ามการรอ (Skip Waiting)
 self.addEventListener('install', (e) => {
   self.skipWaiting(); 
   e.waitUntil(
@@ -14,13 +8,12 @@ self.addEventListener('install', (e) => {
   );
 });
 
-// 2. ตอนทำงาน: ลบแคชเวอร์ชันเก่าทิ้งทันที (Activate & Clean old cache)
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.filter((key) => key !== CACHE_NAME)
-            .map((key) => caches.delete(key)) // ล้างของเก่าทิ้งให้เกลี้ยง!
+            .map((key) => caches.delete(key))
       );
     })
   );
