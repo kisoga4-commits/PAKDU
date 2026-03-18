@@ -195,14 +195,35 @@ function switchTab(tabId, el = null) {
         if(typeof updateDashboard === 'function') updateDashboard(); // ตัวใหม่ของ V9.31
     }
 }
-function attemptAdmin(target, el) { 
-    if(isAdminLoggedIn) { switchTab(target, el); } 
-    else { playSound('click'); pendingAdminAction = { target, el }; document.getElementById('admin-pin-desc').innerText = "รหัสผ่านเพื่อเข้าระบบ"; document.getElementById('admin-pin-input').value = ""; document.getElementById('modal-admin-pin').style.display = 'flex'; setTimeout(() => document.getElementById('admin-pin-input').focus(), 100); } 
+let pendingTab = null;
+let pendingEl = null;
+
+// ฟังก์ชันดัก PIN ก่อนเข้าหน้าแอดมิน
+function attemptAdmin(tabId, el) {
+    if (sessionStorage.getItem('admin_auth') === 'true') {
+        switchTab(tabId, el); // ถ้าเคยใส่ PIN แล้ว ให้ผ่านเลย
+    } else {
+        pendingTab = tabId;
+        pendingEl = el;
+        openModal('modal-admin-pin'); // ถ้ายัง ไม่เคยใส่ ให้เด้งถาม PIN
+    }
 }
-function verifyAdminPin() { 
-    const pin = document.getElementById('admin-pin-input').value.trim(); 
-    if(pin === db.adminPin || pin === "FAKDU-V7-ADMIN") { closeModal('modal-admin-pin'); playSound('success'); localStorage.setItem('FAKDU_ADMIN_LOGGED_IN', 'true'); isAdminLoggedIn = true; if(pendingAdminAction) switchTab(pendingAdminAction.target, pendingAdminAction.el); } 
-    else { document.getElementById('admin-pin-input').value = ""; showToast("รหัส PIN ผิด", "error"); triggerSpyBell("Admin PIN Error"); } 
+
+// ฟังก์ชันยืนยัน PIN
+function verifyAdminPin() {
+    const input = document.getElementById('admin-pin-input').value;
+    const correctPin = db.adminPin || "1234"; // ถ้ายังไม่ได้ตั้งรหัส ให้ใช้ 1234
+
+    if (input === correctPin) {
+        sessionStorage.setItem('admin_auth', 'true'); // จำไว้ว่าผ่านแล้ว
+        closeModal('modal-admin-pin');
+        document.getElementById('admin-pin-input').value = "";
+        if (pendingTab) switchTab(pendingTab, pendingEl);
+        showToast("🔓 ยืนยันตัวตนสำเร็จ", "success");
+    } else {
+        showToast("❌ PIN ไม่ถูกต้อง", "error");
+        document.getElementById('admin-pin-input').value = "";
+    }
 }
 function adminLogout() { localStorage.setItem('FAKDU_ADMIN_LOGGED_IN', 'false'); isAdminLoggedIn = false; switchTab('customer', document.querySelector('#tab-customer')); showToast("🔒 ล็อคแอดมินแล้ว", "success"); }
 
