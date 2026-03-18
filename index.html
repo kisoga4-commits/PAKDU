@@ -32,6 +32,10 @@
             </div>
             <div class="flex flex-col">
                 <h1 id="display-shop-name" class="font-black text-xl leading-none text-white drop-shadow-md truncate max-w-[100px] mb-1">FAKDU</h1>
+                <div class="flex gap-1 mt-1">
+    <div id="header-client-1" class="hidden w-4 h-4 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-[8px] overflow-hidden">👤</div>
+    <div id="header-client-2" class="hidden w-4 h-4 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-[8px] overflow-hidden">👤</div>
+</div>
                 <button id="btn-manual-sync" onclick="triggerSyncCheck(this)" class="flex items-center gap-1.5 bg-white text-blue-600 px-2 py-0.5 rounded-full text-[9px] font-black shadow-sm active:scale-95 transition-all duration-300 w-fit">
                     <div class="w-3.5 h-3.5 bg-gray-200 rounded-full flex items-center justify-center text-[7px] overflow-hidden" id="client-avatar-sync">👤</div>
                     <span>เช็คข้อมูลลูก</span>
@@ -156,14 +160,32 @@
             <button onclick="adminLogout()" class="bg-red-50 text-red-600 border border-red-100 px-5 py-2 rounded-full font-black text-[11px] active:scale-95">🔒 ล็อคแอดมิน</button>
         </div>
 
-        <div id="pro-recovery-setup" class="bg-red-50 border-2 border-red-200 p-6 rounded-[28px] mb-6 shadow-sm hidden">
-            <h3 class="font-black text-red-700 text-sm mb-2">🛡️ ตั้งค่าป้องกันลืมรหัส (PRO)</h3>
-            <p class="text-[10px] text-red-500 font-bold mb-4">หากลืม PIN ข้อมูล 3 อย่างนี้จะช่วยกู้คืนรหัสให้คุณได้แบบ Offline</p>
-            <input type="tel" id="setup-rec-phone" placeholder="1. เบอร์โทรศัพท์" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-white outline-none mb-2 focus:border-red-400">
-            <input type="text" id="setup-rec-color" placeholder="2. สีที่ชอบ" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-white outline-none mb-2 focus:border-red-400">
-            <input type="text" id="setup-rec-animal" placeholder="3. สัตว์ที่อยากเป็น" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-white outline-none mb-4 focus:border-red-400">
-            <button onclick="saveRecoveryData()" class="w-full bg-red-600 text-white py-3 rounded-xl font-black text-xs active:scale-95 shadow-md">💾 บันทึกข้อมูลกู้คืน</button>
-        </div>
+       <div id="pro-recovery-setup" class="bg-red-50 border-2 border-red-200 p-6 rounded-[28px] mb-6 shadow-sm hidden">
+    <h3 class="font-black text-red-700 text-sm mb-4">🛡️ ตั้งค่ากู้คืนรหัส (PRO)</h3>
+    
+    <div class="mb-3">
+        <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">คำถาม 1: สีที่ชอบ (7 สี)</label>
+        <select id="setup-rec-color" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-white outline-none focus:border-red-400">
+            <option value="">-- กรุณาเลือกสี --</option>
+            <option value="red">แดง</option><option value="green">เขียว</option><option value="blue">น้ำเงิน</option>
+            <option value="yellow">เหลือง</option><option value="orange">ส้ม</option><option value="purple">ม่วง</option><option value="pink">ชมพู</option>
+        </select>
+    </div>
+
+    <div class="mb-4">
+        <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">คำถาม 2: สัตว์ที่อยากเป็น (20 ชนิด)</label>
+        <select id="setup-rec-animal" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-white outline-none focus:border-red-400">
+            <option value="">-- กรุณาเลือกสัตว์ --</option>
+            <option value="cat">แมว</option><option value="dog">สุนัข</option><option value="lion">สิงโต</option><option value="tiger">เสือ</option>
+            <option value="elephant">ช้าง</option><option value="horse">ม้า</option><option value="rabbit">กระต่าย</option><option value="monkey">ลิง</option>
+            <option value="bird">นก</option><option value="fish">ปลา</option><option value="chicken">ไก่</option><option value="duck">เป็ด</option>
+            <option value="turtle">เต่า</option><option value="frog">กบ</option><option value="bear">หมี</option><option value="panda">แพนด้า</option>
+            <option value="crocodile">จระเข้</option><option value="giraffe">ยีราฟ</option><option value="zebra">ม้าลาย</option><option value="sheep">แกะ</option>
+        </select>
+    </div>
+
+    <button onclick="saveRecoveryData()" class="w-full bg-red-600 text-white py-3 rounded-xl font-black text-xs active:scale-95 shadow-md">💾 บันทึกคำถามลับ</button>
+</div>
 
         <div class="bg-blue-50 border border-blue-100 p-6 rounded-[28px] mb-6 shadow-sm">
             <h3 class="font-black text-blue-800 text-sm mb-3">☁️ เชื่อมต่อเครื่องลูก (Client)</h3>
