@@ -4,26 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#800000">
-    <title>FAKDU v9.31 PRO - Master Node</title>
+    <title>FAKDU v9.31 PRO - Hybrid Node</title>
+    
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <link rel="stylesheet" href="style.css">
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #f8f9fa; }
+        .glass-header { background: linear-gradient(135deg, #800000, #a52a2a); }
+        .nav-tab.active { color: #800000; border-bottom: 4px solid #800000; }
+        .client-mode-ui .admin-only { display: none !important; } /* ซ่อนส่วนแอดมินถ้าเป็นเครื่องลูก */
+    </style>
 </head>
-<body class="bg-gray-100 font-['Prompt']">
+<body class="bg-gray-100">
 
-<div class="app-container max-w-[480px] mx-auto min-h-screen bg-white shadow-2xl relative overflow-hidden flex flex-col">
+<div class="app-container max-w-[480px] mx-auto min-h-screen bg-white shadow-2xl relative overflow-x-hidden flex flex-col">
     
-    <div id="pwa-install-banner" class="hidden bg-blue-600 text-white w-full px-4 py-3 flex justify-between items-center shadow-md z-[100]">
-        <div class="flex items-center gap-2">
-            <span class="text-2xl">📲</span><span class="text-xs font-bold leading-tight">ติดตั้งแอป FAKDU<br>ทำงานออฟไลน์ 100%</span>
-        </div>
-        <button onclick="installPWA()" class="bg-white text-blue-600 px-4 py-1.5 rounded-full font-black text-xs shadow-sm active:scale-95">ติดตั้ง</button>
-    </div>
-
-    <div class="glass-header relative flex justify-between items-center w-full p-4 bg-[#800000] text-white shrink-0">
+    <header class="glass-header relative flex justify-between items-center w-full p-4 text-white shrink-0">
         <div class="flex items-center gap-3 z-10">
             <div class="relative w-[50px] h-[50px] shrink-0">
                 <div id="online-status-dot" class="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full border-2 border-white bg-green-500 shadow-sm z-20"></div>
@@ -31,7 +32,7 @@
             </div>
             <div class="flex flex-col">
                 <h1 id="display-shop-name" class="font-black text-lg leading-none drop-shadow-md truncate max-w-[120px]">FAKDU</h1>
-                <div class="flex gap-1 mt-1.5">
+                <div class="flex gap-1 mt-1.5" id="staff-online-indicators">
                     <div id="header-client-1" class="hidden w-4 h-4 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-[7px] overflow-hidden">👤</div>
                     <div id="header-client-2" class="hidden w-4 h-4 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-[7px] overflow-hidden">👤</div>
                 </div>
@@ -39,20 +40,22 @@
         </div>
         
         <div class="flex flex-col items-end z-10">
-            <div id="trial-badge" class="bg-yellow-400 text-black px-3 py-1 rounded-full text-[10px] font-black shadow-lg animate-pulse mb-1 cursor-pointer" onclick="openProModal()">รุ่นทดลอง</div>
+            <div id="trial-badge" class="bg-yellow-400 text-black px-3 py-1 rounded-full text-[10px] font-black shadow-lg animate-pulse mb-1 cursor-pointer admin-only" onclick="openProModal()">รุ่นทดลอง</div>
+            <div id="client-badge" class="hidden bg-blue-500 text-white px-3 py-1 rounded-full text-[10px] font-black shadow-lg mb-1">STAFF MODE</div>
             <span class="text-[9px] font-black opacity-50 uppercase tracking-tighter">v9.31 PRO</span>
         </div>
-    </div>
+    </header>
 
-    <div class="top-nav flex bg-white border-b sticky top-0 z-30">
-        <div id="tab-customer" class="nav-tab active flex-1 text-center py-4 font-black text-sm cursor-pointer border-[#800000]" onclick="switchTab('customer', this)">👨‍👩‍👦 ลูกค้า</div>
+    <nav class="top-nav flex bg-white border-b sticky top-0 z-30">
+        <div id="tab-customer" class="nav-tab active flex-1 text-center py-4 font-black text-sm cursor-pointer" onclick="switchTab('customer', this)">👨‍👩‍👦 ลูกค้า</div>
         <div id="tab-shop" class="nav-tab flex-1 text-center py-4 font-black text-sm cursor-pointer text-gray-400" onclick="switchTab('shop', this)">🧾 เช็คบิล</div>
-        <div id="tab-manage" class="nav-tab flex-1 text-center py-4 font-black text-sm cursor-pointer text-gray-400" onclick="attemptAdmin('manage', this)">📊 หลังร้าน</div>
-        <div id="tab-system" class="nav-tab flex-1 text-center py-4 font-black text-sm cursor-pointer text-gray-400" onclick="attemptAdmin('system', this)">⚙️ ระบบ</div>
-    </div>
+        <div id="tab-manage" class="nav-tab flex-1 text-center py-4 font-black text-sm cursor-pointer text-gray-400 admin-only" onclick="attemptAdmin('manage', this)">📊 หลังร้าน</div>
+        <div id="tab-system" class="nav-tab flex-1 text-center py-4 font-black text-sm cursor-pointer text-gray-400 admin-only" onclick="attemptAdmin('system', this)">⚙️ ระบบ</div>
+    </nav>
 
     <main class="flex-1 overflow-y-auto pb-24">
-        <div id="screen-customer" class="screen p-5">
+        
+        <section id="screen-customer" class="screen p-5">
             <div class="flex justify-between items-center mb-4">
                 <span class="text-[11px] font-bold text-gray-400 uppercase">จัดการโต๊ะ/คิว</span>
                 <div class="flex gap-2">
@@ -62,109 +65,116 @@
                 </div>
             </div>
             <div id="grid-units" class="grid grid-cols-2 gap-4"></div>
-        </div>
+            
+            <div id="setup-client-gate" class="mt-8 border-t border-dashed pt-6">
+                <button onclick="openClientScanner()" class="w-full bg-blue-50 text-blue-600 py-4 rounded-[22px] font-black text-xs border-2 border-blue-100 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    📱 สแกนเพื่อเป็นเครื่องลูก (Staff Login)
+                </button>
+            </div>
+        </section>
 
-        <div id="screen-system" class="screen hidden p-5">
+        <section id="screen-system" class="screen hidden p-5 admin-only">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="font-black text-3xl text-gray-800">ตั้งค่าระบบ</h2>
-                <button onclick="adminLogout()" class="text-red-500 font-bold text-xs uppercase underline">🔒 Logout</button>
+                <button onclick="adminLogout()" class="text-red-500 font-bold text-[10px] uppercase underline">🔒 Logout Admin</button>
             </div>
 
             <div id="pro-recovery-setup" class="bg-red-50 border-2 border-red-200 p-6 rounded-[28px] mb-6 shadow-sm hidden">
-                <h3 class="font-black text-red-700 text-sm mb-4">🛡️ ตั้งค่ากู้คืนรหัส (PRO)</h3>
+                <h3 class="font-black text-red-700 text-sm mb-4">🛡️ กู้คืนรหัสผ่าน (PRO ONLY)</h3>
                 <div class="space-y-4">
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">1. เลือกสีที่ชอบ</label>
-                        <select id="setup-rec-color" class="w-full border-2 p-3.5 rounded-2xl font-bold bg-white outline-none focus:border-red-400">
-                            <option value="">-- เลือกสี --</option>
-                            <option value="red">แดง</option><option value="green">เขียว</option><option value="blue">น้ำเงิน</option>
-                            <option value="yellow">เหลือง</option><option value="orange">ส้ม</option><option value="purple">ม่วง</option><option value="pink">ชมพู</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">2. เลือกสัตว์ที่อยากเป็น</label>
-                        <select id="setup-rec-animal" class="w-full border-2 p-3.5 rounded-2xl font-bold bg-white outline-none focus:border-red-400">
-                            <option value="">-- เลือกสัตว์ --</option>
-                            <option value="cat">แมว</option><option value="dog">สุนัข</option><option value="lion">สิงโต</option><option value="tiger">เสือ</option>
-                            <option value="elephant">ช้าง</option><option value="horse">ม้า</option><option value="rabbit">กระต่าย</option><option value="monkey">ลิง</option>
-                            <option value="bird">นก</option><option value="fish">ปลา</option><option value="chicken">ไก่</option><option value="duck">เป็ด</option>
-                            <option value="turtle">เต่า</option><option value="frog">กบ</option><option value="bear">หมี</option><option value="panda">แพนด้า</option>
-                            <option value="crocodile">จระเข้</option><option value="giraffe">ยีราฟ</option><option value="zebra">ม้าลาย</option><option value="sheep">แกะ</option>
-                        </select>
-                    </div>
-                    <button onclick="saveRecoveryData()" class="w-full bg-red-600 text-white py-4 rounded-[20px] font-black text-sm shadow-lg active:scale-95">💾 บันทึกคำถามลับ</button>
+                    <select id="setup-rec-color" class="w-full border-2 p-3.5 rounded-2xl font-bold bg-white outline-none focus:border-red-400">
+                        <option value="">-- 1. เลือกสีที่ชอบ (7 สี) --</option>
+                        <option value="red">แดง</option><option value="green">เขียว</option><option value="blue">น้ำเงิน</option>
+                        <option value="yellow">เหลือง</option><option value="orange">ส้ม</option><option value="purple">ม่วง</option><option value="pink">ชมพู</option>
+                    </select>
+                    <select id="setup-rec-animal" class="w-full border-2 p-3.5 rounded-2xl font-bold bg-white outline-none focus:border-red-400">
+                        <option value="">-- 2. เลือกสัตว์ที่อยากเป็น (20 ชนิด) --</option>
+                        <option value="cat">แมว</option><option value="dog">สุนัข</option><option value="lion">สิงโต</option><option value="tiger">เสือ</option>
+                        <option value="elephant">ช้าง</option><option value="horse">ม้า</option><option value="rabbit">กระต่าย</option><option value="monkey">ลิง</option>
+                        <option value="bird">นก</option><option value="fish">ปลา</option><option value="chicken">ไก่</option><option value="duck">เป็ด</option>
+                        <option value="turtle">เต่า</option><option value="frog">กบ</option><option value="bear">หมี</option><option value="panda">แพนด้า</option>
+                        <option value="crocodile">จระเข้</option><option value="giraffe">ยีราฟ</option><option value="zebra">ม้าลาย</option><option value="sheep">แกะ</option>
+                    </select>
+                    <button onclick="saveRecoveryData()" class="w-full bg-red-600 text-white py-4 rounded-[20px] font-black text-xs shadow-lg active:scale-95">💾 บันทึกคำตอบลับ</button>
                 </div>
             </div>
 
             <div class="bg-blue-50 border border-blue-100 p-6 rounded-[28px] mb-6 text-center">
-                <h3 class="font-black text-blue-800 text-sm mb-4 uppercase tracking-widest">☁️ สถานะซิงค์ข้อมูล</h3>
+                <h3 class="font-black text-blue-800 text-sm mb-4 uppercase tracking-widest">☁️ เชื่อมต่อเครื่องลูก</h3>
                 <div class="flex justify-center gap-5 mb-5">
-                    <div id="sync-avatar-1" class="w-12 h-12 rounded-full bg-white border-2 border-dashed border-gray-300 flex items-center justify-center text-[10px] text-gray-400 font-bold overflow-hidden shadow-inner">ว่าง</div>
-                    <div id="sync-avatar-2" class="w-12 h-12 rounded-full bg-white border-2 border-dashed border-gray-300 flex items-center justify-center text-[10px] text-gray-400 font-bold overflow-hidden shadow-inner">ว่าง</div>
+                    <div id="sync-avatar-1" class="w-12 h-12 rounded-full bg-white border-2 border-dashed border-gray-300 flex items-center justify-center text-[10px] text-gray-400 font-bold overflow-hidden shadow-sm">ว่าง</div>
+                    <div id="sync-avatar-2" class="w-12 h-12 rounded-full bg-white border-2 border-dashed border-gray-300 flex items-center justify-center text-[10px] text-gray-400 font-bold overflow-hidden shadow-sm">ว่าง</div>
                 </div>
-                
-                <div class="bg-white p-4 rounded-2xl mb-5 border-2 border-blue-100 flex items-center gap-4">
-                    <div id="sync-qr-area" class="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden">QR</div>
+                <div class="bg-white p-4 rounded-2xl mb-4 border-2 border-blue-100 flex items-center gap-4">
+                    <div id="sync-qr-area" class="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center">QR</div>
                     <div class="flex-1 text-left">
-                        <p class="text-[9px] text-blue-500 font-bold uppercase mb-1">รหัสเครื่องแม่ (PIN)</p>
-                        <div id="display-sync-key" class="text-2xl font-mono text-blue-900 font-black tracking-widest">A1B2C3</div>
+                        <p class="text-[9px] text-blue-400 font-bold">MASTER PIN</p>
+                        <div id="display-sync-key" class="text-2xl font-mono font-black tracking-widest text-blue-900">A1B2C3</div>
                     </div>
                 </div>
-
-                <button id="btn-sync-manual" onclick="triggerSyncCheck(this)" class="w-full bg-white text-blue-600 border-2 border-blue-100 py-4 rounded-[22px] font-black text-sm active:scale-95 shadow-sm transition-all duration-300">
+                <button id="btn-sync-manual" onclick="triggerSyncCheck(this)" class="w-full bg-white text-blue-600 border-2 border-blue-100 py-4 rounded-[22px] font-black text-xs active:scale-95 transition-all duration-300">
                     🔄 เช็คข้อมูลลูกข่าย
                 </button>
             </div>
-
-            <div class="bg-white p-6 rounded-[28px] border shadow-sm mb-6">
-                <label class="text-[12px] text-gray-400 font-bold uppercase mb-4 block tracking-widest">ข้อมูลร้านค้า</label>
-                <input id="sys-shop-name" type="text" placeholder="ชื่อร้าน" class="w-full border-2 p-3.5 rounded-2xl font-bold bg-gray-50 outline-none mb-3">
-                <div class="grid grid-cols-2 gap-3 mb-6">
-                    <div><label class="text-[10px] text-gray-400 font-bold">ธนาคาร</label><input id="sys-bank" type="text" placeholder="กสิกร" class="w-full border-2 p-3 rounded-xl font-bold bg-gray-50 outline-none"></div>
-                    <div><label class="text-[10px] text-gray-400 font-bold">พร้อมเพย์</label><input id="sys-ppay" type="text" placeholder="เบอร์โทร" class="w-full border-2 p-3 rounded-xl font-bold bg-gray-50 outline-none"></div>
-                </div>
-                <button onclick="saveSystemSettings()" class="w-full bg-[#800000] text-white py-4 rounded-[22px] font-black shadow-lg">💾 บันทึกการตั้งค่า</button>
-            </div>
-        </div>
+        </section>
     </main>
 
-    <div class="modal-overlay fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center p-6" id="modal-pro-unlock">
-        <div class="bg-white w-full max-w-[340px] p-8 rounded-[32px] text-center shadow-2xl scale-in">
-            <h3 class="font-black text-3xl mb-1 text-orange-600 tracking-tighter">👑 UNLOCK PRO</h3>
-            <p class="text-[10px] text-gray-400 mb-6 font-bold uppercase tracking-widest">ID เครื่อง: <span id="display-hwid" class="text-gray-800 font-mono">XXX</span></p>
-            <input type="text" id="pro-key-input" class="w-full border-2 p-5 rounded-2xl text-center text-xl font-black mb-6 uppercase outline-none" placeholder="กรอกรหัส">
-            <button onclick="validateProKey()" class="w-full bg-[#800000] text-white py-4 rounded-[22px] font-black shadow-lg">ปลดล็อคทันที</button>
-            <button onclick="closeModal('modal-pro-unlock')" class="mt-4 text-[11px] text-gray-400 font-bold underline uppercase">ปิด</button>
+    <div id="modal-client-scanner" class="fixed inset-0 bg-black/95 z-[200] hidden flex-col items-center justify-center p-6">
+        <div class="w-full max-w-sm text-center">
+            <h3 class="text-white font-black text-xl mb-6 tracking-widest">📱 พนักงานสแกนเชื่อมต่อ</h3>
+            <div id="qr-reader-index" class="w-full aspect-square bg-black rounded-[32px] overflow-hidden mb-6 border-4 border-blue-500 shadow-2xl"></div>
+            <input type="text" id="manual-pin" placeholder="หรือกรอก PIN 6 หลัก" class="w-full p-5 rounded-2xl text-center text-2xl font-black mb-6 uppercase outline-none bg-white tracking-[8px]">
+            <div class="flex gap-4">
+                <button onclick="closeClientScanner()" class="flex-1 bg-gray-700 text-white py-4 rounded-2xl font-bold">ยกเลิก</button>
+                <button onclick="processClientConnect()" class="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg">เชื่อมต่อ 🚀</button>
+            </div>
         </div>
     </div>
 
-    <div class="modal-overlay fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center p-6" id="modal-recovery">
-        <div class="bg-white w-full max-w-[340px] p-8 rounded-[32px] text-center">
+    <div id="modal-admin-pin" class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center p-6">
+        <div class="bg-white w-full max-w-[320px] p-8 rounded-[32px] text-center shadow-2xl">
+            <h3 class="font-black text-2xl mb-6">SECURITY PIN</h3>
+            <input type="password" id="admin-pin-input" class="w-full border-2 p-5 rounded-[22px] text-center text-5xl font-black mb-6 tracking-[12px] outline-none bg-gray-50 focus:border-[#800000]">
+            <div class="flex gap-3">
+                <button onclick="closeModal('modal-admin-pin')" class="flex-1 bg-gray-100 py-4 rounded-xl font-bold text-gray-400">ยกเลิก</button>
+                <button onclick="verifyAdminPin()" class="flex-[2] bg-[#800000] text-white py-4 rounded-xl font-black shadow-lg">ยืนยัน</button>
+            </div>
+            <button onclick="openRecoveryModal()" class="mt-6 text-red-500 text-xs font-bold underline">ลืมรหัสผ่าน?</button>
+        </div>
+    </div>
+
+    <div id="modal-recovery" class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center p-6">
+        <div class="bg-white w-full max-w-[340px] p-8 rounded-[32px] text-center shadow-2xl">
             <h3 class="font-black text-2xl mb-1 text-red-600">กู้คืนรหัสผ่าน</h3>
-            <p class="text-[11px] text-gray-500 mb-6 font-bold uppercase tracking-widest">ตอบคำถามลับให้ถูกต้อง</p>
-            <div class="space-y-3 mb-6">
-                <select id="rec-ans-color" class="w-full border-2 p-4 rounded-xl font-bold bg-gray-50"><option value="">-- สีที่ชอบ --</option><option value="red">แดง</option><option value="green">เขียว</option><option value="blue">น้ำเงิน</option><option value="yellow">เหลือง</option><option value="orange">ส้ม</option><option value="purple">ม่วง</option><option value="pink">ชมพู</option></select>
-                <select id="rec-ans-animal" class="w-full border-2 p-4 rounded-xl font-bold bg-gray-50"><option value="">-- สัตว์ที่อยากเป็น --</option><option value="cat">แมว</option><option value="dog">สุนัข</option><option value="lion">สิงโต</option><option value="tiger">เสือ</option><option value="elephant">ช้าง</option><option value="horse">ม้า</option><option value="rabbit">กระต่าย</option><option value="monkey">ลิง</option><option value="bird">นก</option><option value="fish">ปลา</option><option value="chicken">ไก่</option><option value="duck">เป็ด</option><option value="turtle">เต่า</option><option value="frog">กบ</option><option value="bear">หมี</option><option value="panda">แพนด้า</option><option value="crocodile">จระเข้</option><option value="giraffe">ยีราฟ</option><option value="zebra">ม้าลาย</option><option value="sheep">แกะ</option></select>
+            <p class="text-[10px] text-gray-400 mb-6 font-bold uppercase tracking-widest">เลือกคำตอบที่ตั้งไว้ให้ถูกต้อง</p>
+            <div class="space-y-4 mb-6">
+                <select id="rec-ans-color" class="w-full border-2 p-4 rounded-xl font-bold bg-gray-50">
+                    <option value="">-- เลือกสีที่ชอบ --</option>
+                    <option value="red">แดง</option><option value="green">เขียว</option><option value="blue">น้ำเงิน</option>
+                    <option value="yellow">เหลือง</option><option value="orange">ส้ม</option><option value="purple">ม่วง</option><option value="pink">ชมพู</option>
+                </select>
+                <select id="rec-ans-animal" class="w-full border-2 p-4 rounded-xl font-bold bg-gray-50">
+                    <option value="">-- เลือกสัตว์ที่อยากเป็น --</option>
+                    <option value="cat">แมว</option><option value="dog">สุนัข</option><option value="lion">สิงโต</option><option value="tiger">เสือ</option>
+                    <option value="elephant">ช้าง</option><option value="horse">ม้า</option><option value="rabbit">กระต่าย</option><option value="monkey">ลิง</option>
+                    <option value="bird">นก</option><option value="fish">ปลา</option><option value="chicken">ไก่</option><option value="duck">เป็ด</option>
+                    <option value="turtle">เต่า</option><option value="frog">กบ</option><option value="bear">หมี</option><option value="panda">แพนด้า</option>
+                    <option value="crocodile">จระเข้</option><option value="giraffe">ยีราฟ</option><option value="zebra">ม้าลาย</option><option value="sheep">แกะ</option>
+                </select>
             </div>
             <div class="flex gap-2">
-                <button onclick="closeModal('modal-recovery')" class="flex-1 bg-gray-100 py-4 rounded-xl font-black text-gray-500 text-sm">กลับ</button>
+                <button onclick="closeModal('modal-recovery')" class="flex-1 bg-gray-100 py-4 rounded-xl font-bold text-gray-500 text-xs">กลับ</button>
                 <button onclick="executeRecovery()" class="flex-[2] bg-red-600 text-white py-4 rounded-xl font-black shadow-lg">ขุดรหัส ⛏️</button>
             </div>
         </div>
     </div>
 
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-black/80 text-white px-6 py-3 rounded-full text-xs font-bold transition-all opacity-0 pointer-events-none z-[200]"></div>
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-black/80 text-white px-6 py-3 rounded-full text-[11px] font-black transition-all opacity-0 pointer-events-none z-[200]"></div>
+
 </div>
 
 <script src="js/vault.js"></script>
 <script src="js/core.js"></script>
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Error:', err));
-        });
-    }
-</script>
 
 </body>
 </html>
