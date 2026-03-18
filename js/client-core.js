@@ -273,4 +273,92 @@ async function sendOrderToMaster() {
     renderCustomerGrid(); // รีเฟรชสีโต๊ะ
     showToast("🚀 ส่งเข้าครัวเรียบร้อย"); 
 }
+
+/**
+ * 🔄 ลอจิกปุ่มเช็ค Sync (Manual Check)
+ * สถานะ: ขาวกระพริบ -> เขียว 10 วิ (ปกติ) / แดงค้าง (ผิดปกติ)
+ */
+function triggerSyncCheck(btn) {
+    if (!btn) return;
+    playSound('click');
+    
+    // 1. เริ่มทำงาน: สีขาวกระพริบ (Pulse)
+    btn.classList.add('animate-pulse');
+    btn.style.backgroundColor = 'white';
+    btn.style.color = '#2563eb'; // สีน้ำเงิน
+    btn.innerText = '⏳ กำลังตรวจสอบข้อมูล...';
+
+    // เช็คความผิดปกติ (มีออร์เดอร์ค้างในเครื่องลูก หรือมี Log การโกง)
+    let isDataMismatch = false;
+    // วนเช็คว่ามีโต๊ะไหนที่มีข้อมูลค้างใน carts (ยังไม่ได้ส่งเข้า Master)
+    for (const key in db.carts) {
+        if (db.carts[key] && db.carts[key].length > 0) {
+            isDataMismatch = true;
+            break;
+        }
+    }
+    
+    // เช็ค Log การทุจริต (Fraud Logs)
+    let isFraud = db.fraudLogs && db.fraudLogs.length > 0;
+
+    // หน่วงเวลา 1.5 วินาที เพื่อจำลองการโหลดข้อมูลจาก Cloud
+    setTimeout(() => {
+        btn.classList.remove('animate-pulse');
+
+        if (isDataMismatch || isFraud) {
+            // 2. กรณีพบความผิดปกติ: เปลี่ยนเป็นสีแดงและค้างไว้
+            btn.style.backgroundColor = '#ef4444'; // แดง
+            btn.style.color = 'white';
+            btn.innerText = '🔴 พบข้อมูลไม่ตรงกัน (เช็คด่วน)';
+            showToast("⚠️ ตรวจพบความผิดปกติ! กรุณาตรวจสอบเครื่องลูก", "error");
+            if(isFraud) triggerSpyBell("Fraud Detected during Sync");
+        } else {
+            // 3. กรณีปกติ: เปลี่ยนเป็นสีเขียว 10 วินาที
+            btn.style.backgroundColor = '#22c55e'; // เขียว
+            btn.style.color = 'white';
+            btn.innerText = '🟢 ข้อมูลซิงค์ตรงกัน 100%';
+            showToast("✅ ข้อมูลตรงกันทั้งหมด", "success");
+
+            // 4. ครบ 10 วินาที กลับเป็นสีขาวปกติ
+            setTimeout(() => {
+                btn.style.backgroundColor = 'white';
+                btn.style.color = '#2563eb';
+                btn.innerText = '🔄 เช็คข้อมูลลูกข่าย';
+            }, 10000);
+        }
+    }, 1500);
+}
+
+/**
+ * 👤 ลอจิกเปิด/ปิด และโชว์รูปโปรไฟล์พนักงาน
+ * @param {number} id - ลำดับเครื่องลูก (1 หรือ 2)
+ * @param {boolean} isOnline - สถานะออนไลน์
+ * @param {string} photo - URL หรือ Base64 รูปพนักงาน (ถ้ามี)
+ */
+function setClientOnlineStatus(id, isOnline, photo = null) {
+    // อ้างอิง ID จาก HTML ที่เราวางไว้
+    const headerAvatar = document.getElementById(`header-client-${id}`);
+    const syncAvatar = document.getElementById(`sync-avatar-${id}`);
+
+    if (!headerAvatar || !syncAvatar) return;
+
+    if (isOnline) {
+        // โชว์วงกลมใต้ชื่อร้าน (Header)
+        headerAvatar.classList.remove('hidden');
+        headerAvatar.innerHTML = photo ? `<img src="${photo}" class="w-full h-full object-cover">` : '👤';
+        
+        // อัปเดตรูปในหน้าตั้งค่า (บนปุ่ม Sync)
+        syncAvatar.innerHTML = photo ? `<img src="${photo}" class="w-full h-full object-cover">` : '👤';
+        syncAvatar.classList.remove('border-dashed', 'border-gray-300', 'text-gray-400');
+        syncAvatar.classList.add('border-solid', 'border-blue-500', 'text-blue-600');
+    } else {
+        // ซ่อนเมื่อออฟไลน์
+        headerAvatar.classList.add('hidden');
+        
+        // รีเซ็ตหน้าตั้งค่าเป็น "ว่าง"
+        syncAvatar.innerHTML = 'ว่าง';
+        syncAvatar.classList.remove('border-solid', 'border-blue-500', 'text-blue-600');
+        syncAvatar.classList.add('border-dashed', 'border-gray-300', 'text-gray-400');
+    }
+}
 //** client-pos close
