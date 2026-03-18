@@ -70,7 +70,41 @@ async function validateProKey() {
     }
 }
 //** license-system close
+// 1. ฟังก์ชัน Hash ข้อมูล (SHA-256)
+async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
+// 2. บันทึกคำถามลับ (Dropdown)
+async function saveRecoveryData() {
+    const color = document.getElementById('setup-rec-color').value;
+    const animal = document.getElementById('setup-rec-animal').value;
+    
+    if (!color || !animal) return showToast("❌ กรุณาเลือกข้อมูลให้ครบ", "error");
+
+    db.recColor = await sha256(color);
+    db.recAnimal = await sha256(animal);
+    saveData(); // บันทึกลง IndexedDB
+    showToast("💾 บันทึกคำถามลับเรียบร้อย", "success");
+}
+
+// 3. ปลดล็อค Pro (เช็คจาก Machine ID เท่านั้น ไม่มี GODMODE)
+async function validateProKey() {
+    const inputKey = document.getElementById('pro-key-input').value.trim().toUpperCase();
+    const hwid = await getSecureMachineID(); 
+    const expectedHash = await sha256(hwid + "FAKDU_PRO_SECRET");
+    const expectedToken = "PRO-" + expectedHash.substring(0, 12).toUpperCase();
+
+    if (inputKey === expectedToken) {
+        db.licenseToken = expectedToken;
+        saveData();
+        location.reload(); // รีโหลดเพื่อเปิดฟีเจอร์ Pro
+    } else {
+        showToast("❌ รหัสไม่ถูกต้อง", "error");
+    }
+}
 //* recovery-system open
 // 3. ระบบกู้คืนรหัส 3 ชั้น (The Recovery Logic)
 async function saveRecoveryData() {
