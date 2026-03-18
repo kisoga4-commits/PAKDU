@@ -24,19 +24,26 @@
         <button onclick="installPWA()" class="bg-white text-blue-600 px-4 py-1.5 rounded-full font-black text-xs shadow-sm active:scale-95">ติดตั้งเลย</button>
     </div>
 
-    <div class="glass-header relative flex justify-between items-center w-full">
-        <div class="flex items-center gap-3 w-[35%] z-10">
-            <div class="relative w-[55px] h-[55px] flex-shrink-0">
-                <div id="online-status-dot" class="absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full border-2 border-white bg-green-500 shadow-sm z-20" title="Online"></div>
-                <img id="shop-logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjYmJiYmJiIi8+PC9zdmc+" class="w-full h-full object-cover rounded-[14px] border-2 border-white shadow-sm bg-white">
+  <div class="glass-header relative flex justify-between items-center w-full p-4 bg-[#800000] text-white">
+        <div class="flex items-center gap-3">
+            <div class="relative w-[50px] h-[50px] shrink-0">
+                <div id="online-status-dot" class="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full border-2 border-white bg-green-500 shadow-sm z-20"></div>
+                <img id="shop-logo" src="icon.png" class="w-full h-full object-cover rounded-[14px] border border-white/20 bg-white">
             </div>
-            <div class="flex gap-1.5 mt-1.5">
-    <div id="header-client-1" class="hidden w-4 h-4 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-[7px] overflow-hidden shadow-sm">👤</div>
-    <div id="header-client-2" class="hidden w-4 h-4 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-[7px] overflow-hidden shadow-sm">👤</div>
-</div>
-    <div id="header-client-1" class="hidden w-4 h-4 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-[8px] overflow-hidden">👤</div>
-    <div id="header-client-2" class="hidden w-4 h-4 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-[8px] overflow-hidden">👤</div>
-</div>
+            <div class="flex flex-col">
+                <h1 id="display-shop-name" class="font-black text-lg leading-none truncate max-w-[120px] mb-1">FAKDU</h1>
+                <div class="flex gap-1.5">
+                    <div id="header-client-1" class="hidden w-4 h-4 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-[7px] overflow-hidden">👤</div>
+                    <div id="header-client-2" class="hidden w-4 h-4 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-[7px] overflow-hidden">👤</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-right">
+            <span class="text-[9px] font-black opacity-50 block uppercase">v9.31 PRO</span>
+            <div id="spy-bell" class="hidden text-xl">🔔</div>
+        </div>
+    </div>
                 <button id="btn-manual-sync" onclick="triggerSyncCheck(this)" class="flex items-center gap-1.5 bg-white text-blue-600 px-2 py-0.5 rounded-full text-[9px] font-black shadow-sm active:scale-95 transition-all duration-300 w-fit">
                     <div class="w-3.5 h-3.5 bg-gray-200 rounded-full flex items-center justify-center text-[7px] overflow-hidden" id="client-avatar-sync">👤</div>
                     <span>เช็คข้อมูลลูก</span>
