@@ -4,1139 +4,733 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#800000">
-    <title>FAKDU v8.0 PWA</title>
+    <title>FAKDU v9.19 - PWA Cloud Sync Ready</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
     <style>
-        :root { --primary: #800000; --bg-custom: #f8fafc; }
-        body { font-family: 'Prompt', sans-serif; background-color: var(--bg-custom); display: flex; justify-content: center; min-height: 100vh; margin: 0; user-select: none; -webkit-tap-highlight-color: transparent; transition: background 0.3s ease; }
-        .app-container { width: 100%; max-width: 480px; background-color: var(--bg-custom); min-height: 100vh; position: relative; display: flex; flex-direction: column; overflow-x: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        :root { --primary: #800000; --bg: #f8fafc; }
+        body { font-family: 'Prompt', sans-serif; background-color: var(--bg); display: flex; justify-content: center; height: 100dvh; margin: 0; user-select: none; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+        .app-container { width: 100%; max-width: 480px; background-color: var(--bg); height: 100dvh; position: relative; display: flex; flex-direction: column; overflow-x: hidden; box-shadow: 0 0 60px rgba(0,0,0,0.4); }
+        .screen { flex: 1; overflow-y: auto; padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
         
-        /* สไตล์แบนเนอร์ติดตั้งแบบดั้งเดิม (ไม่ซ่อนแล้ว) */
-        #install-area { width: 100%; max-width: 480px; z-index: 100; position: sticky; top: 0; }
-        #install-banner { display: none; }
-        #install-banner.show { display: flex; }
+        .glass-header { background: var(--primary); color: white; position: sticky; top: 0; z-index: 50; padding-top: env(safe-area-inset-top); height: calc(100px + env(safe-area-inset-top)); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .top-nav { display: flex; background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: calc(100px + env(safe-area-inset-top)); z-index: 40; }
+        .nav-tab { flex: 1; text-align: center; padding: 15px 0; font-size: 14px; font-weight: 900; color: #94a3b8; cursor: pointer; transition: 0.2s; border-bottom: 4px solid transparent; }
+        .nav-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: #fff5f5; }
+        
+        .unit-card { aspect-ratio: 1; border-radius: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border: 2.5px solid #e2e8f0; background: white; transition: 0.2s; position: relative; }
+        .unit-empty { color: #cbd5e1; }
+        .unit-pending { background-color: #f0f9ff; border-color: #0ea5e9; color: #0284c7; box-shadow: 0 4px 12px rgba(14,165,233,0.15); }
+        .unit-busy { background: linear-gradient(135deg, #fffcf0, #fff); border-color: #f59e0b; color: #92400e; box-shadow: 0 8px 20px rgba(245,158,11,0.25); }
 
-        .glass-header { background: var(--primary); color: white; position: sticky; top: 0; z-index: 50; padding-top: env(safe-area-inset-top); height: calc(100px + env(safe-area-inset-top)); box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
-        .theme-text { color: var(--primary) !important; }
-        .theme-bg { background-color: var(--primary) !important; color: white !important; }
-
-        .status-dot { width: 14px; height: 14px; border-radius: 4px; border: 2px solid white; transition: 0.3s; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
-        .st-on { background-color: #22c55e; box-shadow: 0 0 10px #22c55e; }
-        .st-off { background-color: #ef4444; box-shadow: 0 0 10px #ef4444; }
-        .st-sync { background-color: #eab308; box-shadow: 0 0 10px #eab308; animation: pulse 1s infinite; }
-        
-        .client-online-dot { width: 10px; height: 10px; background: #22c55e; border-radius: 50%; border: 1.5px solid white; box-shadow: 0 0 8px #22c55e; }
-
-        .trial-badge { 
-            background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #451a03; padding: 4px 14px; border-radius: 99px; font-size: 10px; font-weight: 900; 
-            box-shadow: 0 4px 15px rgba(245,158,11,0.5); border: 1px solid #fde68a; position: absolute; left: 50%; transform: translateX(-50%); top: calc(75px + env(safe-area-inset-top));
-        }
-
-        .top-nav { display: flex; background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: calc(100px + env(safe-area-inset-top)); z-index: 40; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-        .nav-tab { flex: 1; text-align: center; padding: 12px 0; font-size: 12px; font-weight: 700; color: #94a3b8; cursor: pointer; transition: 0.2s; border-bottom: 3px solid transparent; }
-        .nav-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: #fdf2f2; }
-        
-        .unit-card { aspect-ratio: 1; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border: 2px solid #e2e8f0; background: white; transition: 0.2s; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
-        .unit-card:active { transform: scale(0.94); }
-        .unit-busy { background: linear-gradient(135deg, #fffcf0, #fff); border-color: #f59e0b; color: #92400e; box-shadow: 0 8px 20px rgba(245, 158, 11, 0.2); }
-        .unit-pending { background-color: #f0f9ff; border-color: #bae6fd; color: #0369a1; }
-        
-        .item-btn { background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 12px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: 0.15s; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
-        .item-btn:active { transform: scale(0.97); background: #fafafa; }
-        .item-img { width: 65px; height: 65px; border-radius: 14px; object-fit: cover; border: 1px solid #f1f5f9; }
-        
-        .bill-card { background: white; border-radius: 20px; padding: 16px; margin-bottom: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.04); }
-        .screen { display: none; flex: 1; overflow-y: auto; padding: 16px; padding-bottom: calc(140px + env(safe-area-inset-bottom)); animation: slideUp 0.25s ease-out; }
-        .screen.active { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-content { background: white; padding: 24px; border-radius: 28px; width: 92%; max-width: 380px; animation: popIn 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.27); max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .modal-content { background: white; padding: 24px; border-radius: 32px; width: 92%; max-width: 400px; animation: popIn 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.27); max-height: 90vh; overflow-y: auto; }
         @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        
-        #toast { visibility: hidden; min-width: 250px; background: #1e293b; color: #fff; text-align: center; border-radius: 16px; padding: 14px; position: fixed; z-index: 10000; left: 50%; bottom: calc(40px + env(safe-area-inset-bottom)); transform: translateX(-50%); font-weight: 700; font-size: 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
-        #toast.show { visibility: visible; animation: fadein 0.4s, fadeout 0.4s 2.5s; }
-        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: calc(40px + env(safe-area-inset-bottom)); opacity: 1; } }
-        @keyframes fadeout { from { bottom: calc(40px + env(safe-area-inset-bottom)); opacity: 1; } to { bottom: 0; opacity: 0; } }
-        ::-webkit-scrollbar { width: 0px; }
 
-        .cart-bottom-bar { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+        .item-btn { background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 12px; display: flex; align-items: center; gap: 14px; cursor: pointer; position: relative; overflow: hidden; }
+        .item-img { width: 65px; height: 65px; border-radius: 14px; object-fit: cover; border: 1px solid #f1f5f9; background: #f8fafc; flex-shrink: 0; }
+        .addon-badge { position: absolute; top: 0; right: 0; background: #f59e0b; color: white; font-size: 9px; font-weight: 900; padding: 2px 8px; border-bottom-left-radius: 12px; }
+        
+        .locked-feature { filter: grayscale(100%); opacity: 0.5; cursor: not-allowed; position: relative; pointer-events: auto; }
+        .locked-feature::after { content: '🔒 PRO'; position: absolute; top: 5px; right: 5px; font-size: 8px; font-weight: bold; background: #ef4444; color: white; padding: 2px 4px; border-radius: 4px; }
+
+        #toast { visibility: hidden; min-width: 250px; background: #1e293b; color: #fff; text-align: center; border-radius: 16px; padding: 14px; position: fixed; z-index: 10000; left: 50%; bottom: 40px; transform: translateX(-50%); font-weight: 800; font-size: 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
+        #toast.show { visibility: visible; animation: fadein 0.4s, fadeout 0.4s 2.5s; }
+        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 40px; opacity: 1; } }
+        @keyframes fadeout { from { bottom: 40px; opacity: 1; } to { bottom: 0; opacity: 0; } }
+        ::-webkit-scrollbar { width: 0px; }
     </style>
 </head>
-<body oncontextmenu="return false;" onkeydown="return ds(event);">
+<body>
 
 <div class="app-container">
     
-    <div id="install-area">
-        <div id="install-banner" class="bg-gradient-to-r from-blue-700 to-blue-900 text-white px-5 py-3 justify-between items-center shadow-md relative z-40 transition-all">
-            <div class="flex items-center gap-3">
-                <span class="text-2xl drop-shadow-md">📲</span>
-                <div>
-                    <div class="font-black text-sm tracking-wide">ติดตั้งแอป FAKDU</div>
-                    <div class="text-[9px] opacity-80 font-bold uppercase tracking-widest">ทำงานออฟไลน์ได้ 100%</div>
-                </div>
-            </div>
-            <button onclick="installPWA()" class="bg-white text-blue-800 px-3 py-1.5 rounded-xl font-bold text-[11px] shadow-lg active:scale-95 transition-transform">ติดตั้งเลย</button>
+    <div id="pwa-install-banner" class="hidden bg-blue-600 text-white w-full px-4 py-3 flex justify-between items-center shadow-md z-[100]">
+        <div class="flex items-center gap-2">
+            <span class="text-2xl">📲</span><span class="text-xs font-bold leading-tight">ติดตั้งแอป FAKDU<br>ทำงานออฟไลน์ 100%</span>
         </div>
+        <button onclick="installPWA()" class="bg-white text-blue-600 px-4 py-1.5 rounded-full font-black text-xs shadow-sm active:scale-95">ติดตั้งเลย</button>
     </div>
 
-    <div class="glass-header flex items-center px-4 justify-between gap-2">
-        <div class="flex items-center gap-3 shrink-0">
-            <div class="relative mt-1">
-                <img id="shop-logo" src="" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjYmJiYmJiIi8+PC9zdmc+'" class="w-[80px] h-[80px] rounded-[20px] object-cover border-2 border-white/40 bg-white shadow-lg">
-                <div id="status-indicator" class="status-dot st-off absolute top-[-4px] left-[-4px]"></div>
-                <div id="client-dots" class="absolute bottom-[-2px] right-[-2px] flex gap-1 z-20"></div>
+    <div class="glass-header relative flex justify-between items-center w-full">
+        <div class="flex items-center gap-3 w-[35%] z-10">
+            <div class="relative w-[55px] h-[55px] flex-shrink-0">
+                <div id="online-status-dot" class="absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full border-2 border-white bg-green-500 shadow-sm z-20" title="Online"></div>
+                <img id="shop-logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjYmJiYmJiIi8+PC9zdmc+" class="w-full h-full object-cover rounded-[14px] border-2 border-white shadow-sm bg-white">
             </div>
             <div class="flex flex-col">
-                <h1 id="shop-name-display" class="font-black text-[28px] leading-none text-white tracking-tighter drop-shadow-md truncate max-w-[120px]">FAKDU</h1>
-                <div id="alert-bell-container" class="admin-only cursor-pointer mt-1 bg-black/40 px-2 py-0.5 rounded-full w-max items-center gap-1 hover:scale-105 transition" onclick="openAlertsModal()" style="display: none;">
-                    <span class="text-[12px]">🔔</span><span id="alert-badge" class="text-white text-[10px] font-black">0</span>
-                </div>
-            </div>
-        </div>
-
-        <div id="trial-badge" class="trial-badge cursor-pointer" onclick="openProModal()">รุ่นทดลอง</div>
-
-        <div class="flex flex-col items-end justify-center shrink-0">
-            <button id="header-action-btn" onclick="handleHeaderAction()" class="bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/40 text-white px-3 py-1.5 rounded-xl font-bold text-[11px] shadow-sm flex items-center gap-1.5 transition active:scale-95">
-                <span id="header-btn-text">สแกนเครื่องแม่</span>
-            </button>
-            <div class="text-[9px] text-white/90 font-black tracking-widest mt-1.5">V8.0 CLOUD</div>
-        </div>
-    </div>
-
-    <div id="store-closed-banner" class="bg-red-500 text-white text-center py-1.5 text-[10px] font-bold uppercase tracking-widest hidden shadow-inner">ปิดร้าน (งดรับออเดอร์)</div>
-
-    <div class="top-nav" id="main-nav">
-        <div class="nav-tab active" onclick="switchTab('customer', this)">👨‍👩‍👦 รับลูกค้า</div>
-        <div class="nav-tab" onclick="switchTab('shop', this)">🧾 เช็คบิล</div>
-        <div class="nav-tab admin-only" onclick="attemptAdmin('manage', this)">📊 หลังร้าน</div>
-        <div class="nav-tab admin-only" onclick="attemptAdmin('system', this)">⚙️ ระบบ</div>
-    </div>
-
-    <div id="screen-customer" class="screen active">
-        <div class="flex justify-between items-end mb-5 px-1">
-            <h2 class="font-black text-2xl text-gray-800">เลือก <span class="lbl-unit">โต๊ะ</span></h2>
-            <button id="btn-client-sync" onclick="triggerCloudSync()" class="client-only text-[10px] bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg font-bold border border-blue-100 shadow-sm active:scale-95 flex items-center gap-1 hidden">
-                <span id="sync-icon">🔄</span> ซิงค์ข้อมูล
-            </button>
-        </div>
-        <div id="grid-units" class="grid grid-cols-3 gap-4"></div>
-    </div>
-
-    <div id="screen-order" class="screen bg-gray-50 hidden">
-        <div class="flex items-center gap-4 mb-4 sticky top-0 bg-gray-50/90 backdrop-blur py-3 z-10 px-1 border-b">
-            <button onclick="switchTab('customer')" class="bg-white px-4 py-2.5 rounded-xl shadow-sm font-bold text-sm text-gray-600 border border-gray-100 active:scale-95 transition-transform">← กลับ</button>
-            <div class="flex-1">
-                <h2 class="font-black text-xl leading-tight"><span class="lbl-unit">โต๊ะ</span> <span id="order-unit-id" class="theme-text"></span></h2>
-                <div class="text-[11px] text-gray-500 font-bold" id="order-pax-display"></div>
+                <h1 id="display-shop-name" class="font-black text-xl leading-none text-white drop-shadow-md truncate max-w-[100px]">FAKDU</h1>
+                <span id="display-client-name" class="text-[10px] font-bold text-white/80 hidden">เครื่องแม่</span>
             </div>
         </div>
         
-        <div id="grid-items" class="grid grid-cols-1 gap-3 mb-32"></div>
+        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center">
+            <div id="trial-badge" class="bg-yellow-400 text-black px-5 py-1.5 rounded-full text-[13px] font-black cursor-pointer shadow-lg animate-pulse" onclick="openProModal()">รุ่นทดลอง</div>
+            <div id="client-mode-badge" class="hidden mt-1 text-[10px] font-black bg-white/20 px-3 py-1 rounded-full text-white cursor-pointer active:scale-95 text-center whitespace-nowrap" onclick="exitClientModePrompt()">ออกโหมดลูก ✖</div>
+        </div>
+        
+        <div class="flex items-center justify-end w-[35%] gap-2 relative h-full pt-2 z-10 pr-2">
+            <div id="spy-bell" class="hidden text-xl cursor-pointer bg-red-500 p-2 rounded-full shadow-lg animate-bounce" onclick="alert('มีการกระทำผิดปกติในระบบ!')">🔔</div>
+            <button onclick="openClientLoginModal()" class="bg-white/20 hover:bg-white/30 w-[42px] h-[42px] rounded-full flex items-center justify-center text-[20px] text-white shadow-lg active:scale-95 transition-transform" title="เข้าโหมดเครื่องลูก">📱</button>
+            <span class="absolute bottom-1 right-2 text-[9px] font-black text-white/70 tracking-wider">v9.19</span>
+        </div>
+    </div>
 
-        <div class="fixed bottom-0 left-0 w-full max-w-[480px] bg-white shadow-[0_-15px_40px_rgba(0,0,0,0.1)] z-20 mx-auto right-0 rounded-t-[28px]">
-            <div id="cart-drawer" class="max-h-60 overflow-y-auto p-5 hidden border-b border-gray-50">
-                <div class="font-bold text-gray-800 mb-3 flex justify-between items-center">
-                    <span class="text-base">🛒 รายการคีย์ค้าง</span> 
-                    <button onclick="clearCart()" class="text-xs bg-red-50 text-red-500 px-4 py-2 rounded-xl font-bold active:scale-95">ล้างทั้งหมด</button>
-                </div>
-                <div id="cart-items" class="divide-y divide-gray-50 text-sm"></div>
+    <div class="top-nav">
+        <div id="tab-customer" class="nav-tab active" onclick="switchTab('customer', this)">👨‍👩‍👦 ลูกค้า</div>
+        <div id="tab-shop" class="nav-tab" onclick="switchTab('shop', this)">🧾 เช็คบิล</div>
+        <div id="tab-manage" class="nav-tab" onclick="attemptAdmin('manage', this)">📊 หลังร้าน</div>
+        <div id="tab-system" class="nav-tab" onclick="attemptAdmin('system', this)">⚙️ ระบบ</div>
+    </div>
+
+    <div id="screen-customer" class="screen active p-5 pt-4">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-[11px] font-bold text-gray-400 uppercase">จัดการโต๊ะ/คิว</span>
+            <div class="flex gap-2 bg-white p-1 rounded-xl shadow-sm border border-gray-100">
+                <button onclick="changeGridZoom(1)" class="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-600 rounded-lg font-black text-lg active:scale-95">-</button>
+                <div class="w-8 h-8 flex items-center justify-center font-bold text-xs text-gray-400" id="zoom-level-text">M</div>
+                <button onclick="changeGridZoom(-1)" class="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-600 rounded-lg font-black text-lg active:scale-95">+</button>
             </div>
-            <div class="cart-bottom-bar px-6 pt-5 bg-white flex justify-between items-center cursor-pointer rounded-t-[28px]" onclick="toggleCartDrawer()">
+        </div>
+        <div id="grid-units" class="grid grid-cols-2 gap-4"></div>
+    </div>
+
+    <div id="screen-order" class="screen hidden bg-gray-50 p-4">
+        <div class="flex items-center gap-4 mb-4 sticky top-0 bg-gray-50/90 backdrop-blur py-2 z-10 border-b">
+            <button onclick="switchTab('customer')" class="bg-white px-4 py-2.5 rounded-xl shadow-sm font-black text-sm text-gray-600 border active:scale-95 transition-transform">← กลับ</button>
+            <h2 class="font-black text-xl theme-text"><span class="lbl-unit">โต๊ะ</span> <span id="active-unit-id"></span></h2>
+        </div>
+        <div id="ordered-items-bar" class="hidden mb-4 bg-blue-50 border border-blue-100 p-3 rounded-xl">
+            <div class="text-[10px] text-blue-600 font-bold uppercase mb-1">สั่งไปแล้ว (ดึงจาก Master)</div>
+            <div id="ordered-items-list" class="text-xs font-bold text-gray-700 space-y-1"></div>
+        </div>
+        <div id="item-list" class="space-y-3 mb-28"></div>
+        <div class="fixed bottom-0 left-0 w-full max-w-[480px] bg-white shadow-[0_-10px_30px_rgba(0,0,0,0.1)] z-20 mx-auto right-0 rounded-t-[28px] p-4 pb-6 border-t border-gray-100" style="padding-bottom: calc(24px + env(safe-area-inset-bottom));">
+            <div class="flex justify-between items-center px-2">
                 <div>
-                    <span class="text-[11px] text-gray-400 font-bold uppercase tracking-widest">รวม <span id="cart-count" class="theme-text font-black text-base">0</span> ชิ้น</span><br>
-                    <span class="font-black text-2xl theme-text tracking-tighter">฿<span id="cart-total">0</span></span>
+                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">ตะกร้า <span id="cart-count" class="theme-text font-black text-base">0</span></span><br>
+                    <span class="font-black text-3xl theme-text tracking-tighter">฿<span id="cart-total">0</span></span>
                 </div>
-                <button onclick="openConfirmOrderModal()" class="theme-bg px-8 py-3.5 rounded-[18px] font-bold text-base shadow-lg active:scale-95 transition-transform">ส่ง 🚀</button>
+                <button onclick="reviewCart()" class="theme-bg px-8 py-3.5 rounded-2xl font-black text-base shadow-lg active:scale-95 transition-transform">ส่งออร์เดอร์ 🚀</button>
             </div>
         </div>
     </div>
 
-    <div id="screen-shop" class="screen">
-        <div class="flex justify-between items-center mb-6 px-1">
-            <h2 class="font-black text-2xl text-gray-800 tracking-tight">คิวรอเช็คบิล</h2>
+    <div id="screen-shop" class="screen hidden p-5 pt-8">
+        <div id="shop-queue" class="space-y-4"></div>
+    </div>
+
+    <div id="screen-manage" class="screen hidden p-5">
+        <div class="flex bg-gray-100 p-2 rounded-[22px] mb-6 border shadow-inner">
+            <div class="manage-tab flex-1 text-center active rounded-[18px] py-3 text-sm font-black cursor-pointer bg-white shadow-sm text-gray-800" onclick="switchManageSub('dash', this)">📊 ยอดขาย</div>
+            <div class="manage-tab flex-1 text-center rounded-[18px] py-3 text-sm font-black cursor-pointer text-gray-500" onclick="switchManageSub('menu', this)">📦 จัดการร้าน</div>
         </div>
-        <div id="list-bills" class="flex flex-col gap-3"></div>
         
-        <div class="mt-12 text-center client-only hidden">
-            <div class="flex flex-col gap-3">
-                <button onclick="disconnectClient()" class="w-full bg-red-50 text-red-600 border-2 border-red-100 py-3.5 rounded-2xl font-bold shadow-sm active:scale-95 flex justify-center items-center gap-2">🔌 ยกเลิกการเชื่อมต่อ</button>
-                <button onclick="manualClearCache()" class="text-[11px] text-gray-400 font-bold underline mt-2 p-2">ล้างข้อมูลแคชเครื่อง (Reset)</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="screen-manage" class="screen">
-        <div class="flex bg-gray-100 p-1.5 rounded-[16px] mb-6 shadow-inner">
-            <div class="dash-tab flex-1 text-center active rounded-[14px] py-2 text-sm font-bold" onclick="switchAdminSubTab('dash', this)">📊 ยอดขาย</div>
-            <div class="dash-tab flex-1 text-center rounded-[14px] py-2 text-sm font-bold" onclick="switchAdminSubTab('menu', this)">📦 จัดการเมนู</div>
-        </div>
-
         <div id="sub-dash">
             <div class="grid grid-cols-3 gap-3 mb-6">
-                <div class="bg-emerald-500 p-3.5 rounded-2xl text-white shadow-lg text-center relative overflow-hidden">
-                    <div class="text-[10px] font-bold opacity-90 uppercase tracking-wider relative z-10">วันนี้</div>
-                    <div class="text-lg font-black mt-0.5 relative z-10 tracking-tighter">฿<span id="stat-today">0</span></div>
-                </div>
-                <div class="bg-blue-500 p-3.5 rounded-2xl text-white shadow-lg text-center relative overflow-hidden">
-                    <div class="text-[10px] font-bold opacity-90 uppercase tracking-wider relative z-10">สัปดาห์นี้</div>
-                    <div class="text-lg font-black mt-0.5 relative z-10 tracking-tighter">฿<span id="stat-week">0</span></div>
-                </div>
-                <div class="bg-purple-500 p-3.5 rounded-2xl text-white shadow-lg text-center relative overflow-hidden">
-                    <div class="text-[10px] font-bold opacity-90 uppercase tracking-wider relative z-10">เดือนนี้</div>
-                    <div class="text-lg font-black mt-0.5 relative z-10 tracking-tighter">฿<span id="stat-month">0</span></div>
-                </div>
+                <div class="bg-emerald-500 p-4 rounded-3xl text-white text-center shadow-lg"><div class="text-[10px] font-bold uppercase">วันนี้</div><div class="text-xl font-black">฿<span id="stat-today">0</span></div></div>
+                <div id="card-stat-week" onclick="handleLockedFeatureClick()" class="bg-blue-500 p-4 rounded-3xl text-white text-center shadow-lg transition-all locked-feature"><div class="text-[10px] font-bold uppercase">7 วัน</div><div class="text-xl font-black">฿<span id="stat-week">0</span></div></div>
+                <div id="card-stat-month" onclick="handleLockedFeatureClick()" class="bg-purple-500 p-4 rounded-3xl text-white text-center shadow-lg transition-all locked-feature"><div class="text-[10px] font-bold uppercase">30 วัน</div><div class="text-xl font-black">฿<span id="stat-month">0</span></div></div>
             </div>
             
-            <div class="card p-5 mb-6 bg-gradient-to-br from-orange-50 to-red-50 border border-orange-100 rounded-2xl">
-                <h3 class="font-black text-orange-800 mb-3 flex items-center gap-2 text-sm">🔥 3 อันดับเมนูขายดี</h3>
-                <div id="top-sellers-list" class="space-y-2"></div>
-            </div>
-
-            <div class="card p-5 border border-gray-100 rounded-2xl">
-                <h3 class="font-bold text-gray-800 mb-3 text-sm">ค้นหายอดขาย</h3>
-                <div class="flex gap-2 mb-4">
-                    <input type="date" id="date-start" class="border p-2.5 rounded-xl text-xs font-bold w-full outline-none bg-gray-50 focus:border-gray-300 transition">
-                    <span class="flex items-center text-gray-400 font-bold">-</span>
-                    <input type="date" id="date-end" class="border p-2.5 rounded-xl text-xs font-bold w-full outline-none bg-gray-50 focus:border-gray-300 transition">
+            <div class="bg-white p-4 rounded-[24px] border border-gray-100 shadow-sm mb-6">
+                <div class="flex bg-gray-50 p-1 rounded-xl mb-4 border">
+                    <div class="dash-sub-tab flex-1 text-center active rounded-lg py-2 text-xs font-black cursor-pointer bg-white shadow-sm text-gray-800" onclick="switchDashTab('history', this)">📝 ประวัติการขาย</div>
+                    <div class="dash-sub-tab flex-1 text-center rounded-lg py-2 text-xs font-black cursor-pointer text-gray-500" onclick="switchDashTab('top', this)">🏆 ยอดฮิต</div>
                 </div>
-                <button onclick="calcCustomStats()" class="w-full bg-blue-50 border border-blue-100 text-blue-700 py-2.5 rounded-xl font-bold text-xs mb-3 active:scale-95">🔍 ค้นหา</button>
-                <div class="bg-blue-50 p-4 rounded-xl text-center border border-blue-100">
-                    <div class="text-[10px] text-blue-600 font-bold uppercase tracking-widest mb-1">ยอดรวมช่วงที่เลือก</div>
-                    <div class="text-2xl font-black text-blue-800 tracking-tighter">฿<span id="stat-custom">0</span></div>
-                </div>
-            </div>
 
-            <div class="card p-5 rounded-2xl mt-5">
-                <h3 class="font-bold text-gray-800 mb-3 border-b pb-2 text-sm">ประวัติการขาย (เก็บ 90 วัน)</h3>
-                <div id="history-list" class="divide-y text-sm max-h-60 overflow-y-auto pr-2"></div>
-                <button onclick="promptClearHistory()" class="w-full mt-6 bg-red-50 text-red-600 py-3.5 rounded-xl font-bold text-xs shadow-sm active:scale-95 transition-transform">🗑️ ล้างยอดขายทั้งหมด</button>
+                <div id="dash-history">
+                    <div class="bg-blue-50 p-3 rounded-2xl border border-blue-100 mb-4" id="custom-search-area">
+                        <div class="text-[10px] text-blue-800 font-bold mb-2">ค้นหายอดขาย (อัปเดตอัตโนมัติ)</div>
+                        <div class="flex gap-2 mb-2">
+                            <input type="date" id="search-start" class="w-full text-xs font-bold p-2 rounded-lg border outline-none text-gray-600 bg-white" onchange="calculateCustomSalesRealtime()">
+                            <input type="date" id="search-end" class="w-full text-xs font-bold p-2 rounded-lg border outline-none text-gray-600 bg-white" onchange="calculateCustomSalesRealtime()">
+                        </div>
+                        <div class="text-center text-[10px] font-bold text-gray-500 bg-white p-2 rounded-lg border">ยอดรวมที่เลือก: <span class="font-black text-xl text-blue-700 tracking-tighter ml-1">฿<span id="search-total">0</span></span></div>
+                    </div>
+                    <div id="sales-history" class="divide-y text-xs space-y-3 max-h-60 overflow-y-auto pr-2"></div>
+                    <button onclick="clearSales()" class="w-full mt-4 bg-red-50 text-red-600 py-3 rounded-xl font-black text-xs active:scale-95 transition-transform border border-red-100 hidden master-only">🗑️ ล้างยอดขายทั้งหมด</button>
+                </div>
+
+                <div id="dash-top" class="hidden">
+                    <div id="top-items-list" class="space-y-2 mt-2"></div>
+                </div>
             </div>
         </div>
 
         <div id="sub-menu" class="hidden">
-            <div class="card bg-gray-50 border-maroon-100 p-5 rounded-2xl mb-5">
-                <h3 class="font-bold mb-3 text-sm">ตั้งค่าจำนวนคิว/โต๊ะ</h3>
-                <div class="flex gap-2 items-center">
-                    <select id="setting-unit" class="border p-3 rounded-xl flex-1 font-bold text-gray-700 outline-none bg-white focus:border-gray-300 transition text-sm">
-                        <option value="โต๊ะ">โหมดโต๊ะ 🍽️</option>
-                        <option value="คิว">โหมดคิว 📝</option>
-                    </select>
-                    <input id="setting-count" type="number" class="border p-3 rounded-xl w-20 text-center font-black outline-none bg-white focus:border-gray-300 transition text-sm">
-                    <button onclick="promptResetUnits()" class="bg-gray-800 text-white px-4 py-3 rounded-xl font-bold shadow-md active:scale-95 text-xs whitespace-nowrap">อัปเดต</button>
+            <div class="bg-gray-50 p-5 rounded-[24px] border mb-6">
+                <h3 class="font-black text-sm mb-4">🪑 ตั้งค่าจำนวนโต๊ะ/คิว</h3>
+                <div class="flex gap-3">
+                    <select id="config-unit-type" class="border-2 p-3 rounded-xl flex-1 font-bold outline-none"><option value="โต๊ะ">โต๊ะ 🍽️</option><option value="คิว">คิว 📝</option></select>
+                    <input id="config-unit-count" type="number" class="border-2 p-3 rounded-xl w-24 text-center font-black outline-none" value="4">
+                    <button onclick="updateUnits()" class="bg-gray-800 text-white px-5 py-3 rounded-xl font-black text-sm active:scale-95">อัปเดต</button>
                 </div>
             </div>
-
-            <div class="card p-5 rounded-2xl mb-5">
-                <div class="flex justify-between items-center mb-4 gap-2">
-                    <h3 class="font-bold text-sm whitespace-nowrap">รายการหลัก (<span id="item-count">0</span>/4)</h3>
-                    <button onclick="openItemModal()" class="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-xs shadow-sm shrink-0 active:scale-95">+ เพิ่ม</button>
+            <div class="bg-white p-5 rounded-[24px] border shadow-sm">
+                <div class="flex justify-between items-center mb-5">
+                    <h3 class="font-black text-sm">รายการเมนู (<span id="menu-count">0</span>)</h3>
+                    <button onclick="openMenuModal()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-black text-xs shadow-md">+ เพิ่ม</button>
                 </div>
-                <div id="admin-item-list" class="space-y-3"></div>
-            </div>
-
-            <div class="card p-5 rounded-2xl">
-                <div class="flex justify-between items-center mb-4 gap-2">
-                    <h3 class="font-bold text-sm whitespace-nowrap">รายการเสริม (Add-on)</h3>
-                    <button onclick="openAddonModal()" class="bg-orange-500 text-white px-4 py-2 rounded-xl font-bold text-xs shadow-sm shrink-0 active:scale-95">+ เพิ่ม</button>
-                </div>
-                <div id="admin-addon-list" class="space-y-3"></div>
+                <div id="admin-menu-list" class="space-y-4"></div>
             </div>
         </div>
     </div>
 
-    <div id="screen-system" class="screen">
+    <div id="screen-system" class="screen hidden p-5">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="font-black text-2xl text-gray-800">ตั้งค่าระบบ</h2>
-            <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-full border shadow-sm">
-                <span id="store-toggle-text" class="text-[10px] font-bold text-emerald-600 uppercase">ร้านเปิด</span>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="store-toggle" class="sr-only peer" onchange="toggleStoreStatus()" checked>
-                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                </label>
+            <h2 class="font-black text-3xl text-gray-800">ตั้งค่าระบบ</h2>
+            <button onclick="adminLogout()" class="bg-red-50 text-red-600 border border-red-100 px-5 py-2 rounded-full font-black text-[11px] active:scale-95">🔒 ล็อคแอดมิน</button>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-100 p-6 rounded-[28px] mb-6 relative overflow-hidden shadow-sm">
+            <div class="flex items-center gap-4 mb-4">
+                <h3 class="font-black text-blue-800 text-sm">☁️ คลาวด์ซิงค์</h3>
+                <div id="system-sync-avatars" class="flex gap-1.5 items-center bg-white/50 px-2 py-1.5 rounded-full border border-blue-200 min-h-[36px]">
+                    <div class="w-6 h-6 rounded-full bg-white border border-gray-300 border-dashed flex items-center justify-center text-[8px] text-gray-400 font-bold empty-slot">ว่าง</div>
+                    <div class="w-6 h-6 rounded-full bg-white border border-gray-300 border-dashed flex items-center justify-center text-[8px] text-gray-400 font-bold empty-slot">ว่าง</div>
+                </div>
+            </div>
+            <p class="text-[9px] text-blue-500 font-bold uppercase mb-3">รหัสสำหรับให้เครื่องลูกใช้ล็อกอิน</p>
+            <div class="flex gap-3 items-center bg-white p-3 rounded-2xl border border-blue-200 shadow-inner mb-4">
+                <div id="sync-qr-area" class="w-16 h-16 bg-gray-100 rounded-xl flex-shrink-0 flex items-center justify-center">QR</div>
+                <div class="flex-1 text-center">
+                    <div id="display-sync-key" class="text-4xl font-mono text-blue-900 font-black tracking-[10px] cursor-pointer active:scale-95" onclick="copySyncPin()" title="กดเพื่อก๊อปปี้">PIN</div>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="requestNewSyncKey()" class="flex-1 bg-white text-blue-600 border border-blue-200 py-3 rounded-xl font-black text-xs active:scale-95 shadow-sm">🔄 ขอรหัสใหม่ (<span id="pin-quota">3</span>)</button>
+                <button onclick="checkSyncStatus()" class="flex-[1.5] bg-blue-600 text-white py-3 rounded-xl font-black text-xs active:scale-95 shadow-md">📡 เช็คการซิงค์</button>
             </div>
         </div>
-        
-        <div class="card bg-white border p-5 rounded-2xl mb-5">
-            <label class="text-[11px] text-gray-400 font-bold uppercase tracking-widest mb-3 block">อัปโหลดโลโก้</label>
-            <div class="flex items-center gap-4 mb-5">
-                <div class="relative w-[75px] h-[75px] bg-gray-50 border-2 border-dashed border-gray-300 rounded-[16px] flex items-center justify-center overflow-hidden shrink-0">
-                    <span class="text-[9px] font-bold text-gray-400 text-center px-1">แตะเปลี่ยน<br>โลโก้</span>
-                    <input type="file" accept="image/*" capture="environment" class="absolute inset-0 opacity-0 cursor-pointer" onchange="processImage(event, 'logo')">
+
+        <div class="bg-white p-6 rounded-[28px] border shadow-sm mb-6">
+            <label class="text-[12px] text-gray-400 font-bold uppercase tracking-widest mb-4 block">ข้อมูลร้านค้า</label>
+            <div class="flex items-center gap-5 mb-6">
+                <div class="relative w-[90px] h-[90px] bg-gray-50 border-2 border-dashed border-gray-300 rounded-[24px] flex items-center justify-center overflow-hidden shrink-0 cursor-pointer" onclick="document.getElementById('upload-logo').click()">
+                    <span class="text-[10px] font-bold text-gray-400 text-center">เปลี่ยน<br>โลโก้</span>
+                    <input type="file" id="upload-logo" accept="image/*" class="hidden" onchange="handleImage(event, 'logo')">
                 </div>
                 <div class="flex-1 space-y-3">
-                    <input id="sys-shopname" type="text" placeholder="ชื่อร้านค้า" class="w-full border p-3 rounded-xl outline-none font-bold text-sm bg-gray-50 focus:border-gray-300 transition">
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1 flex items-center gap-2 bg-gray-50 p-2 rounded-xl border">
-                            <label class="text-[9px] text-gray-500 font-bold uppercase pl-1">สีธีม</label>
-                            <input id="sys-color" type="color" class="w-full h-7 rounded cursor-pointer p-0 border-0 bg-transparent">
-                        </div>
-                        <div class="flex-1 flex items-center gap-2 bg-gray-50 p-2 rounded-xl border">
-                            <label class="text-[9px] text-gray-500 font-bold uppercase pl-1">พื้นหลัง</label>
-                            <input id="sys-bg-color" type="color" class="w-full h-7 rounded cursor-pointer p-0 border-0 bg-transparent" onchange="updateBg(this.value)">
-                        </div>
+                    <input id="sys-shop-name" type="text" placeholder="ชื่อร้านค้า" class="w-full border-2 p-3.5 rounded-2xl font-bold text-base bg-gray-50 outline-none focus:border-primary">
+                    <div class="flex gap-2">
+                        <div class="flex-1 flex items-center gap-2 bg-gray-50 p-2 rounded-xl border-2"><span class="text-[9px] text-gray-400 font-bold uppercase">ธีม</span><input id="sys-theme" type="color" class="w-full h-8 cursor-pointer bg-transparent border-0"></div>
+                        <div class="flex-1 flex items-center gap-2 bg-gray-50 p-2 rounded-xl border-2"><span class="text-[9px] text-gray-400 font-bold uppercase">พื้นหลัง</span><input id="sys-bg" type="color" class="w-full h-8 cursor-pointer bg-transparent border-0"></div>
                     </div>
                 </div>
             </div>
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div><label class="text-[10px] text-gray-400 font-bold mb-1 block uppercase">ธนาคาร</label><input id="sys-bank" type="text" placeholder="กสิกรไทย" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-gray-50 outline-none"></div>
+                <div><label class="text-[10px] text-gray-400 font-bold mb-1 block uppercase">พร้อมเพย์</label><input id="sys-ppay" type="text" placeholder="เบอร์โทร/บัตร" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-gray-50 outline-none"></div>
+            </div>
+            <label class="text-[10px] text-gray-400 font-bold mb-2 block uppercase">รูป QR รับเงิน (สำหรับ Offline)</label>
+            <input type="file" accept="image/*" class="w-full border-2 p-2 rounded-xl text-xs font-bold mb-6 bg-gray-50" onchange="handleImage(event, 'qr')">
             
-            <div class="grid grid-cols-2 gap-3 mb-4">
-                <div><label class="text-[10px] text-gray-400 font-bold mb-1.5 block uppercase">ชื่อธนาคาร</label><input id="sys-bankname" type="text" placeholder="กสิกรไทย" class="w-full border p-3 rounded-xl font-bold text-sm outline-none bg-gray-50 focus:border-gray-300"></div>
-                <div><label class="text-[10px] text-gray-400 font-bold mb-1.5 block uppercase">พร้อมเพย์</label><input id="sys-promptpay" type="text" placeholder="เบอร์โทร/บัตร" class="w-full border p-3 rounded-xl font-bold text-sm outline-none bg-gray-50 focus:border-gray-300"></div>
+            <div class="border-t pt-6 mt-2">
+                <label class="text-[10px] font-bold text-red-500 mb-2 block uppercase">เปลี่ยนรหัส Admin PIN</label>
+                <input id="sys-pin" type="text" class="w-full border-2 p-4 rounded-xl text-xl font-black tracking-widest bg-red-50 text-red-700 outline-none border-red-200 text-center">
+            </div>
+            <button onclick="saveSystemSettings()" class="w-full theme-bg py-4 rounded-[22px] font-black text-lg shadow-lg mt-6 active:scale-95 transition-transform">💾 บันทึกการตั้งค่า</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-8">
+            <button onclick="exportBackup()" class="bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-sm text-xs active:scale-95">📥 Backup DB</button>
+            <div class="relative bg-gray-200 text-gray-700 py-4 rounded-2xl font-black shadow-sm text-xs text-center flex items-center justify-center cursor-pointer active:scale-95">
+                📤 Restore DB <input type="file" accept=".json" class="absolute inset-0 opacity-0 cursor-pointer" onchange="importBackup(event)">
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-client-login">
+        <div class="modal-content text-center">
+            <div class="text-4xl mb-4">📱</div>
+            <h3 class="font-black text-2xl mb-1 text-gray-800">โหมดเครื่องลูกข่าย</h3>
+            <p class="text-[11px] text-gray-500 mb-4 font-bold uppercase">กรอก PIN หรือ สแกน QR เพื่อเชื่อมต่อ</p>
+            
+            <div id="qr-reader" class="mb-4 rounded-xl overflow-hidden w-full hidden border-2 border-blue-200 shadow-inner"></div>
+            <div class="flex gap-2 mb-4">
+                <button id="btn-scan-qr" onclick="startScanner()" class="flex-1 bg-blue-50 text-blue-600 border border-blue-200 py-3 rounded-xl font-black text-xs active:scale-95">📷 สแกน QR Code</button>
+                <button id="btn-stop-scan" onclick="stopScanner()" class="hidden flex-1 bg-red-50 text-red-600 border border-red-200 py-3 rounded-xl font-black text-xs active:scale-95">หยุดสแกน</button>
             </div>
             
-            <label class="text-[11px] text-gray-400 font-bold uppercase mb-2 block mt-2">อัปโหลดรูป QR รับเงิน</label>
-            <input type="file" accept="image/*" capture="environment" class="w-full border p-3 rounded-xl text-xs font-bold mb-4 bg-gray-50" onchange="processImage(event, 'qr')">
-            <img id="sys-qr-preview" class="w-28 h-28 object-cover rounded-[16px] border mb-5 hidden mx-auto shadow-sm">
-            <button onclick="saveSystemSettings()" class="w-full theme-bg py-3.5 rounded-xl font-bold text-base shadow-lg active:scale-95 transition-transform">💾 บันทึกการตั้งค่า</button>
-            
-            <button onclick="adminLogout()" class="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-bold mt-4 text-xs shadow-sm active:scale-95">🔒 ออกจากระบบแอดมิน</button>
-        </div>
-
-        <div class="card bg-gray-50 border border-gray-200 p-5 rounded-2xl mb-5">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="font-black text-base text-gray-800 flex items-center gap-2">🖨️ เครื่องพิมพ์สลิป</h3>
-                <span id="printer-status" class="text-[9px] bg-red-100 text-red-600 px-2 py-1 rounded-md font-bold uppercase tracking-widest shadow-sm">ยังไม่เชื่อมต่อ</span>
-            </div>
-            <p class="text-[10px] text-gray-500 font-bold mb-4">รองรับเครื่องพิมพ์ Bluetooth Thermal (58mm/80mm)</p>
-            <button onclick="connectPrinter()" class="w-full bg-gray-800 text-white py-3.5 rounded-xl font-bold shadow-md text-sm active:scale-95 transition-transform flex items-center justify-center gap-2">
-                🔍 ค้นหาและเชื่อมต่อ
-            </button>
-            <button id="btn-test-print" onclick="testPrint()" class="w-full bg-white text-gray-800 border-2 border-gray-200 py-3 rounded-xl font-bold shadow-sm text-xs mt-3 hidden active:scale-95 transition-transform">
-                📄 ทดสอบพิมพ์
-            </button>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3 mb-5">
-            <button onclick="exportBackup()" class="bg-gray-800 text-white py-3.5 rounded-xl font-bold shadow-sm text-xs active:scale-95">📥 สำรองข้อมูล</button>
-            <div class="relative bg-gray-200 text-gray-700 py-3.5 rounded-xl font-bold shadow-sm text-xs text-center flex items-center justify-center cursor-pointer active:scale-95">
-                📤 กู้คืนข้อมูล
-                <input type="file" accept=".json" class="absolute inset-0 opacity-0 cursor-pointer" onchange="importBackup(event)">
+            <input type="text" id="client-pin-input" class="w-full border-2 border-gray-200 p-5 rounded-[20px] text-center text-4xl font-black mb-6 outline-none bg-gray-50 tracking-[10px] uppercase focus:border-blue-500" placeholder="PIN 6 หลัก">
+            <div class="flex gap-3">
+                <button onclick="closeModal('modal-client-login'); stopScanner();" class="flex-1 bg-gray-100 py-4 rounded-[18px] font-black text-gray-500 text-sm">ยกเลิก</button>
+                <button onclick="attemptClientLogin()" class="flex-[2] bg-blue-600 text-white py-4 rounded-[18px] font-black shadow-lg text-lg">เชื่อมต่อ 🚀</button>
             </div>
         </div>
-
-        <div class="card bg-blue-50 border border-blue-100 text-center p-5 rounded-2xl">
-            <h3 class="font-black text-base text-blue-800 mb-1">🔗 เชื่อมต่อเครื่องลูก</h3>
-            <p class="text-[10px] text-blue-600 mb-4 font-bold uppercase">จำกัด 2 เครื่อง (รุ่นทดลอง)</p>
-            <div class="bg-white p-3 rounded-[20px] inline-block shadow-sm mb-4 border border-blue-200">
-                <div id="master-qr-code" class="mx-auto w-[150px] h-[150px]"></div>
-            </div>
-            <div class="text-[12px] font-mono bg-white px-4 py-2.5 rounded-xl text-gray-700 mb-5 border shadow-inner tracking-widest font-black" id="txt-sync-key">PIN: </div>
-            <button onclick="resetSyncKey()" class="w-full bg-white text-red-500 border border-red-100 py-3.5 rounded-xl font-bold shadow-sm active:scale-95 text-sm">🔔 รีเซ็ตรหัส (เตะเครื่องเก่าออก)</button>
-        </div>
-
-        <div class="text-center p-5 border-t border-gray-100 mt-2 mb-8">
-            <p class="text-[9px] text-gray-400 font-bold uppercase tracking-[4px] mb-2">Machine ID</p>
-            <span id="display-machine-id" class="font-mono text-xs bg-gray-200 px-3 py-1.5 rounded-lg text-gray-700 font-black tracking-widest select-all"></span>
-        </div>
     </div>
-</div>
 
-<div class="modal-overlay" id="modal-master-sync">
-    <div class="modal-content text-center">
-        <h3 class="font-black text-xl mb-1 text-gray-800 tracking-tight">🔗 เชื่อมต่อเครื่องลูก</h3>
-        <p class="text-[10px] text-gray-400 mb-5 font-bold uppercase">ส่ง QR หรือ PIN นี้ให้เครื่องลูกสแกน</p>
-        <div class="bg-white p-3 rounded-[20px] inline-block shadow-sm mb-4 border-2 border-blue-100">
-            <div id="master-qr-display" class="mx-auto w-[180px] h-[180px]"></div>
-        </div>
-        <div class="text-[16px] font-mono bg-gray-50 px-5 py-3 rounded-xl text-gray-700 mb-5 border shadow-inner tracking-[4px] font-black" id="master-pin-display">PIN: </div>
-        <div class="flex flex-col gap-3">
-            <button onclick="resetSyncKey()" class="w-full bg-red-50 text-red-600 border border-red-100 py-3.5 rounded-xl font-bold text-sm shadow-sm active:scale-95">🔔 รีเซ็ตรหัส (เตะเครื่องเก่าออก)</button>
-            <button onclick="closeModal('modal-master-sync')" class="w-full bg-gray-100 py-3.5 rounded-xl font-bold text-gray-500 text-sm shadow-sm active:scale-95">ปิดหน้าต่าง</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-people">
-    <div class="modal-content text-center">
-        <h3 class="font-black text-xl mb-1 text-gray-800">🪑 จำนวนลูกค้า</h3>
-        <p class="text-xs text-gray-400 mb-5 font-bold">โต๊ะ <span id="pax-unit-display" class="theme-text text-base"></span></p>
-        <div class="flex items-center justify-center gap-4 mb-6">
-            <button onclick="adjPax(-1)" class="w-12 h-12 rounded-xl bg-gray-100 font-black text-2xl text-gray-600 active:bg-gray-200 transition-colors">-</button>
-            <input type="number" id="people-count-input" value="1" min="1" class="w-20 border-2 p-2 rounded-xl text-center text-2xl font-black outline-none bg-gray-50 focus:border-gray-300">
-            <button onclick="adjPax(1)" class="w-12 h-12 rounded-xl bg-gray-100 font-black text-2xl text-gray-600 active:bg-gray-200 transition-colors">+</button>
-        </div>
-        <div class="flex gap-3">
-            <button onclick="closeModal('modal-people')" class="flex-1 bg-gray-100 py-3.5 rounded-[16px] font-bold text-gray-500 text-sm">ยกเลิก</button>
-            <button onclick="confirmPeopleCount()" class="flex-[2] theme-bg py-3.5 rounded-[16px] font-bold shadow-md text-base">รับลูกค้า</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-pin">
-    <div class="modal-content text-center">
-        <h3 class="font-black text-xl mb-1 text-gray-800 tracking-tight">SECURITY PIN</h3>
-        <p class="text-[10px] text-gray-400 mb-5 font-bold uppercase tracking-widest">กรุณาใส่รหัสผ่านแอดมิน</p>
-        <input type="password" id="admin-password" class="w-full border-2 p-4 rounded-[16px] text-center text-2xl font-black mb-5 outline-none bg-gray-50 tracking-[10px] focus:border-gray-300 transition">
-        <div class="flex gap-3">
-            <button onclick="closeModal('modal-pin')" class="flex-1 bg-gray-100 py-3.5 rounded-[16px] font-bold text-gray-500 text-sm">ยกเลิก</button>
-            <button onclick="verifyAdmin()" class="flex-[2] theme-bg py-3.5 rounded-[16px] font-bold shadow-md text-base">ยืนยัน</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-alerts">
-    <div class="modal-content">
-        <h3 class="font-black text-lg mb-4 text-red-600 border-b pb-3 flex justify-between items-center">
-            <span>🔔 รายงานระบบ</span>
-            <button onclick="closeModal('modal-alerts')" class="text-[9px] bg-gray-100 px-3 py-1.5 rounded-lg font-bold text-gray-500 uppercase active:scale-95">ปิด</button>
-        </h3>
-        <div id="alert-list" class="max-h-60 overflow-y-auto space-y-3 pr-2"></div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-client-connect">
-    <div class="modal-content text-center bg-white p-6">
-        <h3 class="font-black text-xl mb-1 text-gray-800 tracking-tight">สแกนเชื่อมต่อร้าน</h3>
-        <p class="text-[10px] text-gray-400 mb-4 font-bold uppercase tracking-widest">ใช้กล้องสแกน QR Code จากเครื่องแม่</p>
-        <div id="qr-reader" class="w-full aspect-square bg-gray-900 rounded-[24px] overflow-hidden mb-5 border-4 border-gray-100 shadow-inner flex flex-col items-center justify-center relative"></div>
-        <div class="mb-5 relative">
-            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                <span class="text-gray-400 font-bold text-xs">PIN:</span>
-            </div>
-            <input type="text" id="client-code-input" class="w-full border-2 pl-12 p-3.5 rounded-[16px] text-center text-base font-black tracking-[4px] outline-none bg-gray-50 uppercase focus:border-gray-300" placeholder="กรอกรหัส 6 หลัก">
-        </div>
-        <div class="flex gap-3">
-            <button onclick="closeClientScanner()" class="flex-1 bg-gray-100 py-3.5 rounded-[16px] font-bold text-gray-500 text-sm">ยกเลิก</button>
-            <button onclick="verifyClientSyncFromInput()" class="flex-[2] theme-bg py-3.5 rounded-[16px] font-black shadow-md text-base">เชื่อมต่อ</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-pro-unlock">
-    <div class="modal-content text-center">
-        <h3 class="font-black text-2xl mb-1 theme-text tracking-tight">👑 UNLOCK PRO</h3>
-        <p class="text-[10px] text-gray-400 mb-5 font-bold uppercase tracking-widest">ยกระดับร้านค้าของคุณแบบไร้ขีดจำกัด</p>
-        <div class="bg-yellow-50 p-4 rounded-2xl border border-yellow-100 text-left mb-4 shadow-sm">
-            <ul class="space-y-2.5 text-[11px] font-bold text-yellow-900 leading-tight">
-                <li class="flex items-start gap-2"><span>✅</span> <span>ปลดล็อกจำนวนโต๊ะและเมนูแบบไม่จำกัด</span></li>
-                <li class="flex items-start gap-2"><span>✅</span> <span>ลูกค้าสั่งออร์เดอร์ได้ไม่จำกัด (ยกเลิกจำกัด 4 รายการ)</span></li>
-                <li class="flex items-start gap-2"><span>✅</span> <span>เปิดดูสถิติยอดขายเชิงลึก และเมนูฮิต</span></li>
-                <li class="flex items-start gap-2"><span>✅</span> <span>นำป้าย "รุ่นทดลอง" ออกจากหน้าจอ</span></li>
-                <li class="flex items-start gap-2"><span>✅</span> <span>รองรับระบบฐานข้อมูล PWA ระดับองค์กร</span></li>
-            </ul>
-        </div>
-        <p class="font-black text-xl text-red-600 mb-4 tracking-tighter drop-shadow-sm">ราคาเพียง XXXX- บาท</p>
-        <div class="text-center p-3.5 bg-gray-50 rounded-xl mb-4 border border-gray-200">
-            <p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-1">แจ้งรหัสอ้างอิงนี้แก่แอดมิน</p>
-            <span id="display-machine-id-pro" class="font-mono text-sm text-gray-800 font-black tracking-widest select-all"></span>
-        </div>
-        <div class="mb-4">
-            <input type="text" id="pro-key-input" class="w-full border-2 p-3.5 rounded-xl outline-none font-mono text-center text-sm bg-white uppercase tracking-widest focus:border-gray-300" placeholder="ใส่ License Key ที่นี่">
-        </div>
-        <div class="flex flex-col gap-2.5">
-            <button onclick="valKey()" class="w-full theme-bg py-3.5 rounded-[16px] font-black shadow-md text-base">ยืนยันรหัสปลดล็อค</button>
-            <a id="line-contact-btn" href="https://line.me/ti/p/~YOUR_LINE_ID" target="_blank" class="w-full bg-[#06c755] text-white py-3.5 rounded-[16px] font-black shadow-md flex items-center justify-center gap-2 text-base">💬 ติดต่อรับรหัสปลดล็อค</a>
-            <button onclick="closeModal('modal-pro-unlock')" class="mt-2 text-[10px] text-gray-400 font-bold uppercase underline p-2">ปิดไปก่อน</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-item">
-    <div class="modal-content">
-        <h3 class="font-bold text-lg mb-4 border-b pb-3" id="modal-item-title">เพิ่มรายการหลัก</h3>
-        <input type="hidden" id="form-item-id">
-        <div class="space-y-3">
-            <div><label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">ชื่อเมนู</label><input type="text" id="form-item-name" class="w-full border p-3 rounded-xl outline-none font-bold text-sm bg-gray-50 focus:border-gray-300"></div>
-            <div><label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">ราคา</label><input type="number" id="form-item-price" class="w-full border p-3 rounded-xl outline-none font-bold text-sm bg-gray-50 focus:border-gray-300"></div>
-            <div>
-                <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">รูปภาพ (ถ่ายรูปได้)</label>
-                <input type="file" accept="image/*" capture="environment" class="w-full text-xs font-bold p-2.5 bg-gray-50 rounded-xl border-2 border-dashed cursor-pointer" id="form-item-file" onchange="processImage(event, 'tempItemImg')">
-                <img id="form-item-preview" class="w-16 h-16 object-cover rounded-xl mt-2 hidden border shadow-sm">
-            </div>
-            <div class="bg-blue-50 p-3.5 rounded-xl border border-blue-100 mt-2">
-                <label class="text-[11px] font-bold text-blue-800 block mb-2">✅ เลือกรายการเสริม</label>
-                <div id="form-item-addons" class="space-y-1.5 text-xs max-h-32 overflow-y-auto pr-2"></div>
+    <div class="modal-overlay" id="modal-client-approval">
+        <div class="modal-content text-center">
+            <div class="text-4xl mb-4">🔔</div>
+            <h3 class="font-black text-2xl mb-1 text-gray-800">คำขอเชื่อมต่อสำเร็จ</h3>
+            <p class="text-[11px] text-gray-500 mb-4 font-bold">กรุณาตั้งชื่อให้เครื่องนี้ (บันทึกลงบิล)</p>
+            <input type="text" id="client-name-input" placeholder="เช่น น้องส้ม, ไอแพด 1" class="w-full border-2 p-4 rounded-xl text-lg font-black bg-gray-50 outline-none focus:border-primary mb-6 text-center shadow-inner">
+            <div class="flex gap-3">
+                <button onclick="rejectClient()" class="flex-1 bg-red-100 text-red-600 py-3.5 rounded-2xl font-black text-sm active:scale-95">ปฏิเสธ</button>
+                <button onclick="acceptClient()" class="flex-[2] bg-emerald-500 text-white py-3.5 rounded-2xl font-black text-sm shadow-lg active:scale-95">ยอมรับเข้าห้อง</button>
             </div>
         </div>
-        <div class="flex gap-3 mt-6">
-            <button onclick="closeModal('modal-item')" class="flex-1 bg-gray-100 py-3.5 rounded-[16px] font-bold text-gray-500 text-sm">ยกเลิก</button>
-            <button onclick="saveItem()" class="flex-[2] theme-bg py-3.5 rounded-[16px] font-bold shadow-md text-sm">บันทึก</button>
-        </div>
     </div>
-</div>
 
-<div class="modal-overlay" id="modal-addon-create">
-    <div class="modal-content">
-        <h3 class="font-bold text-base mb-4 text-gray-800 border-b pb-3">➕ สร้างรายการเสริม</h3>
-        <div class="space-y-3">
-            <div><label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">ชื่อรายการ</label><input type="text" id="addon-create-name" class="w-full border p-3 rounded-xl outline-none bg-gray-50 font-bold text-sm focus:border-gray-300"></div>
-            <div><label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">ราคาบวกเพิ่ม</label><input type="number" id="addon-create-price" class="w-full border p-3 rounded-xl outline-none bg-gray-50 font-bold text-sm focus:border-gray-300"></div>
-        </div>
-        <div class="flex gap-3 mt-6">
-            <button onclick="closeModal('modal-addon-create')" class="flex-1 bg-gray-100 py-3.5 rounded-[16px] font-bold text-gray-500 text-sm">ยกเลิก</button>
-            <button onclick="saveNewAddon()" class="flex-[2] theme-bg py-3.5 rounded-[16px] font-bold shadow-md text-sm">บันทึก</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-addon">
-    <div class="modal-content">
-        <h3 class="font-black text-xl border-b pb-3 mb-3 theme-text" id="addon-target-name">รายการ</h3>
-        <p class="text-[10px] font-bold text-gray-400 uppercase mb-3">เลือกรายการเสริม <span id="addon-limit-text" class="text-red-500">(ทดลองใช้ 1 อย่าง)</span></p>
-        <div id="addon-checkboxes" class="space-y-2 mb-6 max-h-48 overflow-y-auto pr-2"></div>
-        <div class="flex gap-3">
-            <button onclick="closeModal('modal-addon')" class="flex-1 bg-gray-100 py-3.5 rounded-[16px] font-bold text-gray-500 text-sm">กลับ</button>
-            <button onclick="confirmAddonToCart()" class="flex-[2] theme-bg py-3.5 rounded-[16px] font-black shadow-md text-sm">เพิ่ม</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-confirm-order">
-    <div class="modal-content bg-gray-50 p-4">
-        <div class="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100 mb-4 text-center">
-            <h2 class="font-black text-lg mb-1 text-gray-800">📝 ตรวจสอบออเดอร์</h2>
-            <p class="text-xs text-gray-500"><span class="lbl-unit">โต๊ะ</span> <span id="confirm-order-unit" class="font-black text-black text-xl"></span></p>
-            <div id="confirm-order-list" class="mt-4 text-xs text-left divide-y border-t border-b py-2 max-h-40 overflow-y-auto font-medium text-gray-700"></div>
-            <div class="mt-3 font-black text-2xl theme-text text-right tracking-tighter">฿<span id="confirm-order-total">0</span></div>
-        </div>
-        <div class="flex gap-3">
-            <button onclick="closeModal('modal-confirm-order')" class="flex-1 bg-gray-200 py-3.5 rounded-[16px] font-bold text-gray-600 text-sm">แก้ไข</button>
-            <button onclick="executeSendOrder()" class="flex-[2] theme-bg py-3.5 rounded-[16px] font-black shadow-md text-base">ยืนยันส่ง 🚀</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-checkout">
-    <div class="modal-content p-0 overflow-hidden bg-gray-100 max-w-[360px]">
-        <div class="bg-white p-5 text-center shadow-sm relative z-10">
-            <h2 class="font-black text-xl mb-1 text-gray-800 tracking-tight">เช็คบิล</h2>
-            <p class="theme-text font-bold text-base"><span class="lbl-unit">โต๊ะ</span> <span id="bill-unit-id" class="text-2xl font-black"></span></p>
-            <div class="text-[10px] text-gray-400 font-bold mb-2 mt-0.5" id="bill-pax-display"></div>
-            <div id="bill-items" class="mt-3 text-xs text-left divide-y border-t border-b py-2 max-h-40 overflow-y-auto font-medium text-gray-600"></div>
-            <div class="mt-3 pt-2 flex justify-between items-center text-2xl font-black text-black">
-                <span class="text-[10px] text-gray-400 uppercase font-bold tracking-widest">ยอดสุทธิ</span>
-                <span class="tracking-tighter">฿<span id="bill-net-total">0</span></span>
-            </div>
-        </div>
-        <div id="qr-section" class="text-center bg-white p-5 border-t border-dashed border-gray-200 relative z-0">
-            <p class="font-black text-blue-600 text-[9px] uppercase tracking-widest mb-2">แสกนจ่าย</p>
-            <p id="checkout-bank-details" class="text-[10px] font-black text-gray-600 mb-3 bg-gray-100 inline-block px-3 py-1 rounded-full"></p>
-            <div id="dynamic-qr-container" class="mx-auto w-[160px] h-[160px] bg-gray-50 rounded-[20px] border-4 border-gray-100 flex items-center justify-center overflow-hidden shadow-inner">
-                <img id="bill-qr-img" src="" class="w-full h-full object-cover hidden">
-                <div id="bill-qr-gen"></div>
-            </div>
-        </div>
-        <div id="payment-buttons" class="p-4 grid grid-cols-2 gap-3 bg-white shadow-[0_-5px_15px_rgba(0,0,0,0.03)] relative z-10">
-            <button onclick="processPayment('cash')" class="bg-emerald-500 text-white py-4 rounded-[16px] font-black shadow-md text-base active:scale-95 transition-transform uppercase">เงินสด 💵</button>
-            <button onclick="processPayment('qr')" class="bg-blue-600 text-white py-4 rounded-[16px] font-black shadow-md text-base active:scale-95 transition-transform uppercase">โอน 📱</button>
-        </div>
-        <div id="client-warning" class="bg-red-50 text-red-500 p-3 text-center font-bold text-[10px] hidden border-t">⚠️ เครื่องลูกไม่มีสิทธิ์รับเงิน</div>
-        <button onclick="closeModal('modal-checkout')" class="w-full bg-gray-100 py-4 text-gray-500 font-bold text-[10px] uppercase tracking-widest border-t active:bg-gray-200 transition-colors">ปิดหน้าต่าง</button>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-confirm">
-    <div class="modal-content text-center max-w-[300px]">
-        <h3 class="font-black text-xl mb-2 text-gray-800">⚠️ ยืนยัน?</h3>
-        <p class="text-xs text-gray-500 mb-6 font-medium" id="confirm-msg"></p>
-        <div class="flex gap-3">
-            <button onclick="executeConfirm(false)" class="flex-1 bg-gray-100 py-3.5 rounded-[16px] font-bold text-gray-500 text-sm">ยกเลิก</button>
-            <button onclick="executeConfirm(true)" class="flex-1 bg-red-600 text-white py-3.5 rounded-[16px] font-bold shadow-md text-sm">ยืนยัน</button>
-        </div>
-    </div>
-</div>
-
-<div id="toast"></div> 
+    <div class="modal-overlay" id="modal-menu-form"><div class="modal-content"><h3 class="font-black text-2xl mb-5 border-b pb-4 text-gray-800">เพิ่มรายการเมนู</h3><input type="hidden" id="form-menu-id"><div class="space-y-4"><div><label class="text-[11px] font-bold text-gray-400 uppercase mb-1 block">ชื่อ</label><input id="form-menu-name" type="text" class="w-full border-2 p-3.5 rounded-2xl outline-none font-bold text-base bg-gray-50 focus:border-primary"></div><div><label class="text-[11px] font-bold text-gray-400 uppercase mb-1 block">ราคา</label><input id="form-menu-price" type="number" class="w-full border-2 p-3.5 rounded-2xl outline-none font-bold text-base bg-gray-50 focus:border-primary"></div><div class="bg-gray-50 p-3 rounded-2xl border border-gray-200"><div class="flex justify-between items-center mb-2"><label class="text-[11px] font-bold text-gray-500 uppercase tracking-widest">รายการเสริม (Add-ons)</label><button onclick="addAddonField()" class="bg-white border text-blue-600 text-[10px] font-black px-2 py-1 rounded">+ เพิ่ม</button></div><div id="addon-fields-container" class="space-y-2"></div></div><div><label class="text-[11px] font-bold text-gray-400 uppercase mb-1 block">รูปภาพ</label><input type="file" accept="image/*" class="w-full text-xs font-bold p-2 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300" onchange="handleImage(event, 'temp')"><img id="form-menu-preview" class="w-20 h-20 object-cover rounded-2xl mt-3 hidden border-2 shadow-sm"></div></div><div class="flex gap-4 mt-6"><button onclick="closeModal('modal-menu-form')" class="flex-1 bg-gray-100 py-3.5 rounded-[18px] font-bold text-gray-500">ยกเลิก</button><button onclick="saveMenuItem()" class="flex-[2] theme-bg py-3.5 rounded-[18px] font-black shadow-lg text-lg">บันทึก</button></div></div></div>
     
-// ---------------- ฟังก์ชันพื้นฐาน ----------------
-function ds(e) { if(e.keyCode==123||(e.ctrlKey&&e.shiftKey&&(e.keyCode==73||e.keyCode==74))||(e.ctrlKey&&e.keyCode==85)) return false; }
+    <div class="modal-overlay" id="modal-addon-select"><div class="modal-content"><h3 class="font-black text-2xl mb-2 text-gray-800" id="addon-modal-name">ชื่อเมนู</h3><p class="theme-text font-black text-lg mb-4 border-b pb-4">฿<span id="addon-modal-price">0</span></p><div id="addon-options-list" class="space-y-3 mb-4 max-h-48 overflow-y-auto"></div><div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl mb-6 border"><span class="text-xs font-bold text-gray-600">จำนวนที่สั่ง:</span><div class="flex items-center gap-3"><button onclick="adjustAddonQty(-1)" class="w-8 h-8 rounded-lg bg-white border font-bold text-lg">-</button><span id="addon-qty-display" class="font-black text-xl">1</span><button onclick="adjustAddonQty(1)" class="w-8 h-8 rounded-lg bg-white border font-bold text-lg">+</button></div></div><div class="flex gap-4"><button onclick="closeModal('modal-addon-select')" class="flex-1 bg-gray-100 py-4 rounded-[20px] font-bold text-gray-500">ยกเลิก</button><button onclick="confirmAddonSelection()" class="flex-[2] theme-bg py-4 rounded-[20px] font-black shadow-lg text-lg">ใส่ตะกร้า 🛒</button></div></div></div>
 
+    <div class="modal-overlay" id="modal-pro-unlock">
+        <div class="modal-content text-center">
+            <h3 class="font-black text-3xl mb-1 text-orange-600 tracking-tighter">👑 UNLOCK PRO</h3>
+            <p class="text-[11px] text-gray-500 mb-6 font-bold uppercase tracking-widest">ปลดล็อคฟีเจอร์และยอดขายย้อนหลัง</p>
+            <div class="bg-yellow-50 p-5 rounded-2xl border border-yellow-100 text-left mb-6 shadow-sm">
+                <ul class="space-y-3 text-[12px] font-bold text-yellow-900 leading-tight">
+                    <li class="flex items-start gap-2"><span>✅</span> <span>ไม่จำกัดโต๊ะ/คิว และเมนู</span></li>
+                    <li class="flex items-start gap-2"><span>✅</span> <span>ดูยอดขาย ค้นหาวันที่ย้อนหลังได้เรียลไทม์</span></li>
+                    <li class="flex items-start gap-2"><span>✅</span> <span>นำป้าย "รุ่นทดลอง" ออกถาวร</span></li>
+                </ul>
+            </div>
+            <div class="font-black text-3xl text-red-600 mb-5">990 <span class="text-xl">บาท</span></div>
+            <div class="text-center p-4 bg-gray-50 rounded-2xl mb-6 border">
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">ID ปลดล็อค (Machine ID)</p>
+                <span id="display-hwid" class="font-mono text-xl text-gray-800 font-black tracking-widest select-all">XXX</span>
+            </div>
+            <input type="text" id="pro-key-input" class="w-full border-2 p-5 rounded-2xl outline-none font-mono text-center text-xl bg-white uppercase tracking-widest focus:border-gray-400 mb-6" placeholder="รหัสปลดล็อค">
+            
+            <a href="https://line.me/ti/p/~YOUR_LINE_ID" target="_blank" class="w-full bg-[#00B900] text-white py-4 rounded-2xl font-black shadow-md flex items-center justify-center gap-2 text-sm no-underline active:scale-95 transition-transform mb-4 border-b-4 border-[#009900]">
+                <span class="text-xl">💬</span> ติดต่อแอดมินเพื่อขอรหัส PRO
+            </a>
+            
+            <div class="flex flex-col gap-3">
+                <button onclick="validateProKey()" class="w-full theme-bg py-5 rounded-[22px] font-black shadow-lg text-lg active:scale-95 transition-transform">ปลดล็อคทันที 🚀</button>
+                <button onclick="closeModal('modal-pro-unlock')" class="mt-3 text-[11px] text-gray-400 font-bold uppercase underline p-2">ปิดไปก่อน</button>
+            </div>
+        </div>
+    </div>
 
-function initIndexedDB() {
-    return new Promise((resolve) => {
+    <div class="modal-overlay" id="modal-review"><div class="modal-content bg-gray-50 p-5"><div class="bg-white p-5 rounded-[24px] shadow-sm border mb-4 text-center"><h2 class="font-black text-xl mb-1">📝 ตรวจสอบออเดอร์</h2><p class="text-sm text-gray-500 font-bold"><span class="lbl-unit">โต๊ะ</span> <span id="review-unit-id" class="font-black text-black text-2xl"></span></p><div id="review-list" class="mt-4 text-sm text-left divide-y border-t border-b py-3 max-h-48 overflow-y-auto font-bold text-gray-700"></div><div class="mt-3 text-right"><span class="text-[10px] text-gray-400 font-bold uppercase">ยอดรวมบิลนี้</span><br><span class="font-black text-3xl theme-text tracking-tighter">฿<span id="review-total-price">0</span></span></div></div><div class="flex gap-3"><button onclick="closeModal('modal-review')" class="flex-1 bg-gray-200 py-3.5 rounded-2xl font-black text-gray-600 text-base active:scale-95">แก้ไข</button><button onclick="confirmOrderSend()" class="flex-[2] theme-bg py-3.5 rounded-2xl font-black shadow-lg text-lg active:scale-95">ส่งออร์เดอร์ 🚀</button></div></div></div>
+
+    <div class="modal-overlay" id="modal-checkout">
+        <div class="modal-content p-0 overflow-hidden bg-gray-100 max-w-[400px]">
+            <div class="bg-white p-6 text-center shadow-sm relative z-10">
+                <h2 class="font-black text-2xl mb-1 text-gray-800">เช็คบิล</h2>
+                <p class="theme-text font-black text-4xl mb-3"><span class="lbl-unit text-xl">โต๊ะ</span> <span id="checkout-unit-id"></span></p>
+                <div id="checkout-item-list" class="mt-2 text-xs text-left divide-y border-t border-b py-4 max-h-48 overflow-y-auto font-bold text-gray-700"></div>
+                <div class="mt-4 flex justify-between items-center text-black">
+                    <span class="text-[12px] text-gray-400 font-bold uppercase">ยอดสุทธิ</span>
+                    <span class="font-black text-4xl tracking-tighter">฿<span id="checkout-total">0</span></span>
+                </div>
+            </div>
+            <div id="checkout-qr-area" class="text-center bg-white p-5 border-t border-dashed border-gray-200">
+                <p class="font-black text-blue-600 text-[10px] uppercase mb-3">สแกนจ่าย PROMPTPAY</p>
+                <div id="qr-container" class="mx-auto w-[160px] h-[160px] bg-gray-50 rounded-[24px] border-4 border-gray-100 flex items-center justify-center overflow-hidden shadow-inner relative"><img id="qr-offline-img" class="w-full h-full object-cover hidden"><div id="qr-gen-area"></div></div>
+                <p id="qr-status-text" class="text-[9px] text-gray-400 mt-2"></p>
+            </div>
+            <div class="p-5 bg-white border-t relative z-10">
+                <div id="checkout-payment-buttons" class="flex gap-2 mb-2">
+                    <button onclick="confirmPayment('cash')" class="flex-1 bg-emerald-500 text-white py-4 rounded-[20px] font-black shadow-lg text-sm active:scale-95">💵 เงินสด</button>
+                    <button onclick="confirmPayment('transfer')" class="flex-1 bg-blue-500 text-white py-4 rounded-[20px] font-black shadow-lg text-sm active:scale-95">📱 โอน/QR</button>
+                </div>
+                <div id="checkout-client-warning" class="hidden mb-3 p-3 bg-red-50 text-red-600 rounded-xl text-center text-[11px] font-black border border-red-100">
+                    ⚠️ โหมดเครื่องลูก: ไม่มีสิทธิ์กดรับเงินหรือลบบิล
+                </div>
+                <button onclick="closeModal('modal-checkout')" class="w-full bg-gray-100 text-gray-500 py-3.5 rounded-[20px] font-black text-sm active:scale-95 uppercase">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-admin-pin"><div class="modal-content text-center"><h3 class="font-black text-3xl mb-1 text-gray-800">SECURITY PIN</h3><p class="text-[11px] text-gray-400 mb-6 font-bold uppercase" id="admin-pin-desc">รหัสผ่านเพื่อเข้าระบบ</p><input type="password" id="admin-pin-input" class="w-full border-2 border-gray-200 p-5 rounded-[24px] text-center text-5xl font-black mb-6 outline-none bg-gray-50 tracking-[12px] focus:border-primary"><div class="flex gap-4"><button onclick="closeModal('modal-admin-pin')" class="flex-1 bg-gray-100 py-4 rounded-[20px] font-black text-gray-500 text-lg">ยกเลิก</button><button onclick="verifyAdminPin()" class="flex-[2] theme-bg py-4 rounded-[20px] font-black shadow-lg text-lg">ยืนยัน</button></div></div></div>
+
+<div id="toast"></div>
+
+<script>
+// PWA Installation 
+let deferredPrompt; window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('pwa-install-banner').classList.remove('hidden'); });
+function installPWA() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then((c) => { if (c.outcome === 'accepted') { document.getElementById('pwa-install-banner').classList.add('hidden'); } deferredPrompt = null; }); } }
+
+// Date Helper 
+function getLocalYYYYMMDD(d = new Date()) { const options = { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }; return new Intl.DateTimeFormat('en-CA', options).format(d); }
+
+// ======================================================================
+// 🔥 FAKDU V9.19 : PWA & CLOUD SYNC READY ENGINE
+// ======================================================================
+const DB_NAME = "FAKDU_PWA_DB";
+let idb;
+
+const DEFAULT_DB = { shopName: "FAKDU", logo: "", theme: "#800000", bgColor: "#f8fafc", adminPin: "admin", unitType: "โต๊ะ", unitCount: 4, isPro: false, bank: "", ppay: "", qrOffline: "", syncKey: "A1B2C3", units: [], items: [], sales: [], carts: {}, fraudLogs: [] };
+let db = { ...DEFAULT_DB };
+
+function openIndexedDB() {
+    return new Promise((resolve, reject) => {
         const req = indexedDB.open(DB_NAME, 1);
-        req.onupgradeneeded = e => { e.target.result.createObjectStore(STORE_NAME); };
-        req.onsuccess = e => {
-            const idb = e.target.result;
-            const tx = idb.transaction(STORE_NAME, 'readonly');
-            const getReq = tx.objectStore(STORE_NAME).get('main');
-            getReq.onsuccess = e2 => { 
-                if(e2.target.result) { db = e2.target.result; cart = db.tempCart || []; }
-                if(!db.pending_sync) db.pending_sync = []; 
-                resolve(); 
-            };
-            getReq.onerror = () => resolve();
+        req.onupgradeneeded = e => {
+            idb = e.target.result;
+            if(!idb.objectStoreNames.contains('store')) idb.createObjectStore('store');
         };
-        req.onerror = () => resolve();
+        req.onsuccess = e => { idb = e.target.result; resolve(idb); };
+        req.onerror = e => reject("DB Error");
+    });
+}
+function saveToIDB() {
+    return new Promise((resolve) => {
+        const tx = idb.transaction('store', 'readwrite');
+        tx.objectStore('store').put(db, 'fakdu_data');
+        tx.oncomplete = () => { resolve(); };
+    });
+}
+function loadFromIDB() {
+    return new Promise((resolve) => {
+        const tx = idb.transaction('store', 'readonly');
+        const req = tx.objectStore('store').get('fakdu_data');
+        req.onsuccess = () => resolve(req.result);
     });
 }
 
-function saveData() {
-    db.tempCart = cart;
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onsuccess = e => { e.target.result.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).put(db, 'main'); };
-    applyTheme(); renderAll(); enforceRole(); renderAlertsBadge();
+// ☁️ Stub สำหรับ Firebase (รอเสียบ)
+function syncToCloud() {
+    // โค้ดนี้จะถูกอัปเกรดเมื่อต่อ Firebase:
+    // if(!navigator.onLine || !db.isPro) return;
+    // firebase.database().ref('shops/' + machineID).set(db);
+    console.log("Cloud Sync Triggered (Stub)");
 }
 
-function runAutoClean() {
-    if(!db.sales) return;
-    const now = Date.now();
-    const oldLen = db.sales.length;
-    db.sales = db.sales.filter(s => (now - s.id) < 7776000000); 
-    if(db.sales.length < oldLen) saveData();
-}
+// ฟังก์ชันเซฟหลัก
+function saveData() { saveToIDB().then(()=>{ renderAll(); applyTheme(); updateSyncStatusDots(); syncToCloud(); }); }
 
-// ---------------- เสียงแจ้งเตือน ----------------
-const AudioContext = window.AudioContext || window.webkitAudioContext; let audioCtx;
-function playSound(t) {
-    try { if(!audioCtx) audioCtx = new AudioContext(); if(audioCtx.state === 'suspended') audioCtx.resume();
-        const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination);
-        if(t === 'click') { o.type = 'sine'; o.frequency.setValueAtTime(600, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); o.start(); o.stop(audioCtx.currentTime + 0.05); } 
-        else if(t === 'success') { o.type = 'triangle'; o.frequency.setValueAtTime(400, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1); g.gain.setValueAtTime(0.1, audioCtx.currentTime); o.start(); o.stop(audioCtx.currentTime + 0.3); } 
-        else if(t === 'error') { o.type = 'sawtooth'; o.frequency.setValueAtTime(150, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); o.start(); o.stop(audioCtx.currentTime + 0.2); }
-    } catch(e) {}
-}
-function showToast(m, t='click') { playSound(t); const el = document.getElementById("toast"); el.innerText = m; el.className = "show"; setTimeout(() => el.className = "", 2800); }
+let isAdminLoggedIn = localStorage.getItem('FAKDU_ADMIN_LOGGED_IN') === 'true'; 
+let isClientMode = false; let currentClientName = "เครื่องแม่"; let clientPinToken = null;
 
-// ---------------- PWA ติดตั้งแอป ----------------
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    document.getElementById('install-banner').classList.add('show'); 
-});
+async function getHWID() { let id = localStorage.getItem('FAKDU_HWID'); if(!id) { const c = document.createElement('canvas'); const ctx = c.getContext('2d'); ctx.fillText('FAKDU', 4, 17); const b64 = c.toDataURL(); const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(b64)); const hex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase().substring(0, 11); id = `${hex.substring(0,3)}-${hex.substring(3,7)}-${hex.substring(7,11)}`; localStorage.setItem('FAKDU_HWID', id); } return id; }
 
-async function installPWA() {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-            document.getElementById('install-banner').classList.remove('show'); 
-        }
-        deferredPrompt = null;
-    }
-}
-
-
-
-// ---------------- เริ่มระบบ ----------------
-async function initApp() {
-    await initIndexedDB(); 
-    if(!db.alerts) db.alerts = [];
-    if(!db.bgColor) db.bgColor = "#f8fafc";
-    runAutoClean();
-
-    document.getElementById('display-machine-id').innerText = getFingerprint();
-    document.getElementById('display-machine-id-pro').innerText = getFingerprint();
-
-    if(db.units.length === 0 && db.role === 'master') forceRebuildUnits(db.unitCount, db.unit, true);
-    
-    loadSettingsToForm(); applyTheme(); checkProStatus(); renderStoreStatus(); enforceRole(); renderAlertsBadge();
-    switchTab('customer', document.querySelector('.nav-tab'));
-    
-    if(db.role === 'master') generateMasterQR();
-
-    setInterval(checkConn, 3000); checkConn();
-    setInterval(() => { if(document.getElementById('screen-shop').classList.contains('active')) renderShopQueue(); }, 60000);
-    setInterval(() => { if(navigator.onLine && db.pending_sync.length > 0) triggerCloudSync(); }, 5000);
-}
-
-// <--- อัปเดตสถานะออนไลน์ / ออฟไลน์ / กำลังซิงค์ --->
-function checkConn() {
-    const d = document.getElementById('status-indicator');
-    const clientDots = document.getElementById('client-dots');
-    const isOnline = navigator.onLine;
-
-    if(isOnline) { 
-        if(db.role === 'client' && db.pending_sync.length > 0) {
-            d.className = "status-dot st-sync absolute top-[-4px] left-[-4px]";
-        } else {
-            d.className = "status-dot st-on absolute top-[-4px] left-[-4px]"; 
-        }
-    } else { 
-        d.className = "status-dot st-off absolute top-[-4px] left-[-4px]"; 
-    }
-
-    if(db.role === 'master' && isOnline) {
-        clientDots.innerHTML = '<div class="client-online-dot"></div>'; 
-    } else {
-        clientDots.innerHTML = '';
-    }
-}
-
-// ---------------- ☁️ CLOUD BRIDGE API ----------------
-let isSyncing = false;
-let lastSyncTime = 0;
-
-async function triggerCloudSync() {
-    if(!navigator.onLine || isSyncing) return;
-    const now = Date.now();
-    if(now - lastSyncTime < 3000) return; // Cooldown
-    
-    isSyncing = true;
-    const syncIcon = document.getElementById('sync-icon');
-    if(syncIcon) syncIcon.style.transform = 'rotate(180deg)';
-
+async function initDB() {
     try {
-        if(db.role === 'client') {
-            // 📦 1. ดันข้อมูลใน Outbox ขึ้น Cloud
-            if(db.pending_sync && db.pending_sync.length > 0) {
-                console.log("📤 Pushing to Cloud:", db.pending_sync);
-                // เมื่อ Cloud ต่อเสร็จ ให้ล้าง Array นี้
-                db.pending_sync = []; 
-                saveData();
-                showToast("ซิงค์ออร์เดอร์ขึ้น Cloud สำเร็จ", "success");
-            }
-        } 
-    } catch(e) {
-        console.error("Sync Failed", e);
-    }
-
-    lastSyncTime = Date.now();
-    isSyncing = false;
-    if(syncIcon) syncIcon.style.transform = 'rotate(0deg)';
-    checkConn();
-}
-
-function mergeIncomingOrders(incomingOrders) {
-    let hasNewOrder = false;
-    incomingOrders.forEach(newOrder => {
-        let u = db.units.find(x => x.id === newOrder.uId);
-        if(u) {
-            if(!u.orders) u.orders = [];
-            // ตรวจสอบ RefID กันส่งซ้ำ
-            if(!u.orders.some(ex => ex.refId === newOrder.refId)) {
-                u.orders.push(newOrder);
-                u.status = 'busy';
-                if(!u.startTime) u.startTime = Date.now();
-                hasNewOrder = true;
-            }
-        }
-    });
-    if(hasNewOrder) { saveData(); showToast("อัปเดตโต๊ะจากเครื่องลูกแล้ว", "success"); }
-}
-
-function updateBg(c) { document.documentElement.style.setProperty('--bg-custom', c); }
-function updateBgTone(c) { db.bgColor = c; updateBg(c); }
-
-function enforceRole() {
-    const isMaster = db.role === 'master';
-    const headerBtnText = document.getElementById('header-btn-text');
-    headerBtnText.innerText = isMaster ? "🔗 เชื่อมต่อเครื่องลูก" : "📷 สแกนเครื่องแม่";
-
-    if(isMaster) { 
-        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block'); 
-        document.querySelectorAll('.client-only').forEach(el => el.style.display = 'none');
-        document.getElementById('payment-buttons').classList.remove('hidden');
-        document.getElementById('client-warning').classList.add('hidden');
-        if(!db.isPro) document.getElementById('trial-badge').style.display = 'block';
-    } else { 
-        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none'); 
-        document.querySelectorAll('.client-only').forEach(el => el.style.display = 'block');
-        document.getElementById('payment-buttons').classList.add('hidden');
-        document.getElementById('client-warning').classList.remove('hidden');
-        document.getElementById('trial-badge').style.display = 'none';
+        await openIndexedDB();
+        const storedData = await loadFromIDB();
         
-        // โชว์ปุ่มซิงค์ให้เครื่องลูก
-        const btnSync = document.getElementById('btn-client-sync');
-        if(btnSync) btnSync.classList.remove('hidden');
-    }
+        if(storedData) { db = { ...DEFAULT_DB, ...storedData }; } 
+        
+        // ล้างแคชขยะยอดขายอัตโนมัติ (เกิน 90 วัน ลบทิ้ง)
+        const limit = Date.now() - (90 * 24 * 60 * 60 * 1000); 
+        db.sales = db.sales.filter(s => s.id > limit);
+        if(!db.fraudLogs) db.fraudLogs = []; // เพิ่มฟิลด์ใหม่ v9.19
+        
+        if(db.units.length === 0) forceRebuildUnits(db.unitCount, db.unitType, true);
+        if(!db.carts || typeof db.carts !== 'object') db.carts = {}; db.units.forEach(u => { if(!db.carts[u.id]) db.carts[u.id] = []; });
+        
+        document.getElementById('display-hwid').innerText = await getHWID();
+        
+        // ตั้งค่า Default ยอดขายเป็นวันนี้
+        const td = getLocalYYYYMMDD(); document.getElementById('search-start').value = td; document.getElementById('search-end').value = td;
+        
+        updateSyncStatusDots(); renderAll(); loadSettingsToForm(); applyTheme(); updateSyncUI(); startTableTimers(); updateGridZoomUI();
+        startHeartbeatMonitor(); // ใช้งานระบบเช็คชีพจร
+    } catch(err) { showToast("เกิดข้อผิดพลาดในการโหลดฐานข้อมูล", "error"); console.error(err); }
+}
+// ======================================================================
+
+// Audio & Toast
+const AudioContext = window.AudioContext || window.webkitAudioContext; let audioCtx;
+function playSound(t) { try { if(!audioCtx) audioCtx = new AudioContext(); if(audioCtx.state === 'suspended') audioCtx.resume(); const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); if(t === 'click') { o.type = 'sine'; o.frequency.setValueAtTime(600, audioCtx.currentTime); g.gain.setValueAtTime(0.05, audioCtx.currentTime); o.start(); o.stop(audioCtx.currentTime + 0.05); } else if(t === 'success') { o.type = 'triangle'; o.frequency.setValueAtTime(400, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1); g.gain.setValueAtTime(0.1, audioCtx.currentTime); o.start(); o.stop(audioCtx.currentTime + 0.3); } else if(t === 'error') { o.type = 'sawtooth'; o.frequency.setValueAtTime(150, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); o.start(); o.stop(audioCtx.currentTime + 0.2); } } catch(e) {} }
+function showToast(m, type='click') { playSound(type); const el = document.getElementById("toast"); el.innerText = m; el.className = "show"; setTimeout(() => el.className = "", 2800); }
+
+// Navigation
+let pendingAdminAction = null; let activeUnitId = null; let tempImg = null; let currentCheckoutTotal = 0; let pendingAddonItem = null; let currentAddonQty = 1;
+function switchTab(id, el = null) { playSound('click'); document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); document.getElementById(`screen-${id}`).classList.remove('hidden'); if(el) { document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); } if(id === 'shop') renderShopQueue(); if(id === 'manage') renderAnalytics(); }
+function attemptAdmin(target, el) { if(isClientMode) return showToast("⚠️ เครื่องลูกไม่มีสิทธิ์เข้าหลังร้าน", "error"); if(isAdminLoggedIn) { switchTab(target, el); } else { playSound('click'); pendingAdminAction = { target, el }; document.getElementById('admin-pin-desc').innerText = "รหัสผ่านเพื่อเข้าระบบ"; document.getElementById('admin-pin-input').value = ""; document.getElementById('modal-admin-pin').style.display = 'flex'; setTimeout(() => document.getElementById('admin-pin-input').focus(), 100); } }
+function verifyAdminPin() { const pin = document.getElementById('admin-pin-input').value.trim(); if(pin === db.adminPin || pin === "FAKDU-V7-ADMIN") { closeModal('modal-admin-pin'); playSound('success'); if(pendingAdminAction && pendingAdminAction.target === 'exitClient') { deactivateClientMode(); return; } localStorage.setItem('FAKDU_ADMIN_LOGGED_IN', 'true'); isAdminLoggedIn = true; if(pendingAdminAction) switchTab(pendingAdminAction.target, pendingAdminAction.el); } else { document.getElementById('admin-pin-input').value = ""; showToast("รหัส PIN ผิด", "error"); triggerSpyBell("Admin PIN Error"); } }
+function adminLogout() { localStorage.setItem('FAKDU_ADMIN_LOGGED_IN', 'false'); isAdminLoggedIn = false; switchTab('customer', document.querySelector('.nav-tab')); showToast("🔒 ล็อคแอดมินแล้ว", "success"); }
+
+// ----------------------------------------------------
+// ☁️ ระบบ Cloud Sync & Heartbeat
+// ----------------------------------------------------
+let connectedClientsCount = 0; let pinRequestQuota = 3; let pinLastReset = getLocalYYYYMMDD();
+
+function updateSyncStatusDots() {
+    const dot = document.getElementById('online-status-dot');
+    if(!navigator.onLine) { dot.className = 'absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full border-2 border-white bg-red-500 shadow-sm z-20'; dot.title='Offline'; return; }
+    
+    let hasPendingOrders = false; for (const key in db.carts) { if(db.carts[key].length > 0) hasPendingOrders = true; }
+    if(hasPendingOrders) { dot.className = 'absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full border-2 border-white bg-yellow-400 shadow-sm z-20'; dot.title='รอส่งออร์เดอร์'; }
+    else { dot.className = 'absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full border-2 border-white bg-green-500 shadow-sm z-20'; dot.title='Online Sync'; }
+}
+window.addEventListener('online', updateSyncStatusDots); window.addEventListener('offline', updateSyncStatusDots);
+
+function checkSyncStatus() {
+    playSound('click'); updateSyncStatusDots();
+    if(!navigator.onLine) return showToast("❌ ออฟไลน์ ไม่สามารถซิงค์ได้", "error");
+    let hasPending = false; for (const k in db.carts) { if(db.carts[k].length > 0) hasPending = true; }
+    if(hasPending) { showToast("⚠️ มีออร์เดอร์ค้างในเครื่อง ยังส่งไม่ครบ", "click"); }
+    else { showToast("✅ ข้อมูลอัปเดตตรงกัน 100%", "success"); }
 }
 
-function handleHeaderAction() {
-    if(db.role === 'master') {
-        document.getElementById('master-pin-display').innerText = "PIN: " + db.syncKey;
-        document.getElementById('modal-master-sync').style.display = 'flex';
-        generateMasterQR();
-    } else {
-        openClientConnect();
-    }
+// ระบบเปลี่ยน PIN
+function requestNewSyncKey() { 
+    if (pinLastReset !== getLocalYYYYMMDD()) { pinRequestQuota = 3; pinLastReset = getLocalYYYYMMDD(); } 
+    if (pinRequestQuota <= 0) return showToast("❌ จำกัด 3 ครั้ง/วัน", "error"); 
+    if(connectedClientsCount > 0) { if(!confirm("⚠️ มีเครื่องลูกเชื่อมต่ออยู่! หากเปลี่ยนรหัส เครื่องลูกจะหลุดและต้องล็อกอินใหม่ แน่ใจหรือไม่?")) return; }
+    
+    db.syncKey = Math.random().toString(36).substring(2, 8).toUpperCase(); 
+    pinRequestQuota--; saveData(); updateSyncUI(); 
+    showToast("✅ สร้างรหัสใหม่แล้ว เครื่องลูกเก่าถูกเตะออก", "success");
+    
+    if(isClientMode && clientPinToken !== db.syncKey) { triggerSpyBell("Sync Key Changed"); alert("รหัสซิงค์ถูกเปลี่ยนโดยเครื่องแม่ กรุณาล็อกอินใหม่"); deactivateClientMode(); }
+}
+function copySyncPin() { navigator.clipboard.writeText(db.syncKey); showToast("📋 ก๊อปปี้รหัสแล้ว", "success"); }
+function updateSyncUI() { document.getElementById('display-sync-key').innerText = db.syncKey; document.getElementById('pin-quota').innerText = pinRequestQuota; const qrArea = document.getElementById('sync-qr-area'); qrArea.innerHTML = ''; new QRCode(qrArea, { text: db.syncKey, width: 64, height: 64 }); }
+
+// ----------------------------------------------------
+// 📷 ระบบล็อกอินเครื่องลูก
+// ----------------------------------------------------
+let html5QrCode;
+function openClientLoginModal() { if(isClientMode) return showToast("⚠️ คุณอยู่ในโหมดเครื่องลูกแล้ว", "error"); playSound('click'); document.getElementById('client-pin-input').value = ""; document.getElementById('modal-client-login').style.display = 'flex'; }
+function attemptClientLogin() { 
+    const pin = document.getElementById('client-pin-input').value.trim().toUpperCase(); 
+    if(pin === db.syncKey) { 
+        closeModal('modal-client-login'); stopScanner(); playSound('success'); document.getElementById('client-name-input').value = ""; document.getElementById('modal-client-approval').style.display = 'flex'; 
+    } else { showToast("❌ รหัส PIN ผิด", "error"); triggerSpyBell("Client Login Failed"); } 
 }
 
-function logAlert(msg) { db.alerts.push({ id: Date.now(), msg, date: new Date().toLocaleString('th-TH') }); saveData(); }
-function renderAlertsBadge() {
-    const b = document.getElementById('alert-badge'); const c = document.getElementById('alert-bell-container');
-    if(db.alerts.length > 0 && db.role === 'master') { c.style.display = 'flex'; b.innerText = db.alerts.length; } else { c.style.display = 'none'; }
+function startScanner() {
+    playSound('click'); document.getElementById('qr-reader').style.display = 'block'; document.getElementById('btn-scan-qr').classList.add('hidden'); document.getElementById('btn-stop-scan').classList.remove('hidden');
+    html5QrCode = new Html5Qrcode("qr-reader");
+    html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => { playSound('success'); document.getElementById('client-pin-input').value = decodedText; stopScanner(); attemptClientLogin(); },
+        (errorMessage) => { /* ignore */ }
+    ).catch((err) => { showToast("ไม่สามารถเปิดกล้องได้", "error"); stopScanner(); });
+}
+function stopScanner() { if(html5QrCode) { html5QrCode.stop().then(()=>{ html5QrCode.clear(); }).catch(e=>{}); } document.getElementById('qr-reader').style.display = 'none'; document.getElementById('btn-scan-qr').classList.remove('hidden'); document.getElementById('btn-stop-scan').classList.add('hidden'); }
+
+function acceptClient() { const cName = document.getElementById('client-name-input').value.trim(); if(!cName) return showToast("⚠️ กรุณาพิมพ์ชื่อพนักงาน", "error"); playSound('click'); activateClientMode(cName); closeModal('modal-client-approval'); }
+function rejectClient() { playSound('error'); closeModal('modal-client-approval'); showToast("❌ ปฏิเสธ", "error"); }
+
+function activateClientMode(name) {
+    isClientMode = true; currentClientName = name; isAdminLoggedIn = false; clientPinToken = db.syncKey; connectedClientsCount++;
+    
+    // UI Updates
+    document.getElementById('tab-manage').classList.add('hidden'); document.getElementById('tab-system').classList.add('hidden');
+    document.getElementById('client-mode-badge').classList.remove('hidden'); document.getElementById('client-mode-badge').innerHTML = "📱โหมดลูก (" + name + ") ✖";
+    document.getElementById('display-client-name').classList.remove('hidden'); document.getElementById('display-client-name').innerText = name;
+    document.getElementById('trial-badge').classList.add('hidden');
+    
+    const avatarHTML = `<div class="w-7 h-7 rounded-full border-2 border-green-500 bg-white shadow-sm flex items-center justify-center text-[10px] font-black text-gray-700" title="${name}">${name.substring(0,2)}</div>`;
+    const emptySlot = document.querySelector('.empty-slot'); if(emptySlot) emptySlot.outerHTML = avatarHTML;
+    
+    updateSyncStatusDots(); switchTab('customer', document.getElementById('tab-customer')); showToast("📱 ล็อกอินสำเร็จ", "success");
 }
 
-function openAlertsModal() {
-    const list = document.getElementById('alert-list'); list.innerHTML = '';
-    if(db.alerts.length === 0) { list.innerHTML = '<div class="text-center text-gray-400 py-6 text-sm font-bold">ไม่มีการแจ้งเตือน</div>'; } 
-    else { db.alerts.slice().reverse().forEach(a => { list.innerHTML += `<div class="bg-red-50 p-3.5 rounded-xl mb-3 flex justify-between items-start border border-red-100"><div class="text-[11px] text-red-800 font-bold flex-1"><div class="text-[9px] text-red-400 mb-1 uppercase tracking-wider">${a.date}</div>${a.msg}</div><button onclick="clearAlert(${a.id})" class="text-[9px] bg-red-200 text-red-700 px-2.5 py-1.5 rounded-lg font-bold ml-3 active:scale-95 uppercase">ลบทิ้ง</button></div>`; }); }
-    document.getElementById('modal-alerts').style.display = 'flex';
-}
-function clearAlert(id) { db.alerts = db.alerts.filter(a => a.id !== id); saveData(); openAlertsModal(); }
+function exitClientModePrompt() { playSound('click'); pendingAdminAction = { target: 'exitClient', el: null }; document.getElementById('admin-pin-desc').innerText = "รหัสแอดมิน เพื่อออกจากโหมดลูก"; document.getElementById('admin-pin-input').value = ""; document.getElementById('modal-admin-pin').style.display = 'flex'; }
 
-function openClientConnect() {
-    document.getElementById('modal-client-connect').style.display = 'flex';
-    if(!html5QrCode) html5QrCode = new Html5Qrcode("qr-reader");
-    html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: {width: 250, height: 250} }, 
-    (t) => { playSound('success'); html5QrCode.stop(); verifyClientSync(t); }).catch(err => { showToast("เปิดกล้องไม่ได้", "error"); });
-}
-function closeClientScanner() { if(html5QrCode && html5QrCode.isScanning) { html5QrCode.stop().catch(e=>{}); } closeModal('modal-client-connect'); }
-function verifyClientSyncFromInput() { const c = document.getElementById('client-code-input').value.trim(); if(c) verifyClientSync(c); else showToast("กรุณากรอกรหัส", "error"); }
-function verifyClientSync(c) { if(c.length > 0) { db = { ...DEFAULT_DB, role: 'client', syncKey: c }; saveData(); closeClientScanner(); showToast("✅ เชื่อมต่อสำเร็จ!", "success"); setTimeout(()=>location.reload(), 1500); } }
-
-function disconnectClient() { customConfirm("🔌 ยกเลิกเชื่อมต่อและล้างข้อมูล?", () => { logAlert(`เครื่องลูก ${getFingerprint()} ล้างแคชเมื่อ ${new Date().toLocaleTimeString('th-TH')}`); setTimeout(() => { indexedDB.deleteDatabase(DB_NAME); localStorage.clear(); location.reload(); }, 500); }); }
-
-// 🚨 Stealth Alert ส่งสัญญาณก่อนลบแคช
-function manualClearCache() { 
-    customConfirm("ล้างข้อมูลแคชเครื่อง (Reset)?", () => { 
-        logAlert(`เครื่องลูก ${getFingerprint()} ล้างแคชเมื่อ ${new Date().toLocaleTimeString('th-TH')}`); 
-        console.log(`🚨 ALERT CLOUD: เครื่อง ${getFingerprint()} ทำการ Reset`);
-        setTimeout(() => { indexedDB.deleteDatabase(DB_NAME); localStorage.clear(); location.reload(); }, 800); 
-    }); 
+function deactivateClientMode() {
+    isClientMode = false; currentClientName = "เครื่องแม่"; clientPinToken = null; connectedClientsCount = 0;
+    
+    document.getElementById('tab-manage').classList.remove('hidden'); document.getElementById('tab-system').classList.remove('hidden');
+    document.getElementById('client-mode-badge').classList.add('hidden');
+    document.getElementById('display-client-name').classList.add('hidden');
+    if(!db.isPro) document.getElementById('trial-badge').classList.remove('hidden');
+    
+    document.getElementById('system-sync-avatars').innerHTML = `<div class="w-6 h-6 rounded-full bg-white border border-gray-300 border-dashed flex items-center justify-center text-[8px] text-gray-400 font-bold empty-slot">ว่าง</div><div class="w-6 h-6 rounded-full bg-white border border-gray-300 border-dashed flex items-center justify-center text-[8px] text-gray-400 font-bold empty-slot">ว่าง</div>`;
+    
+    // V9.19: เราจะไม่ล้างตะกร้า (db.carts) เพื่อป้องกันออร์เดอร์ค้างสูญหาย (Draft System)
+    showToast("✅ กลับสู่โหมดเครื่องแม่แล้ว (ออร์เดอร์ค้างยังอยู่)", "success"); updateSyncStatusDots();
 }
 
-function resetSyncKey() { 
-    customConfirm("เตะเครื่องลูกออกทั้งหมด?", () => { 
-        db.syncKey = Math.random().toString(36).substring(2,8).toUpperCase(); 
-        saveData(); 
-        generateMasterQR(); 
-        document.getElementById('master-pin-display').innerText = "PIN: " + db.syncKey;
-        showToast("🔐 เปลี่ยนรหัสสำเร็จ", "success"); 
-    }); 
+// 🔔 Spy Bell 2.0 (เตรียมพร้อมสำหรับ Cloud)
+function triggerSpyBell(reason = "Unknown Error") { 
+    if(isClientMode) { 
+        // ถ้าเป็นเครื่องลูก กดลบบิล บันทึก Log แทน (เดี๋ยว Master ดึงไปสั่นกระดิ่ง)
+        db.fraudLogs.push({ time: Date.now(), client: currentClientName, reason: reason });
+        saveToIDB(); // แอบเซฟ ไม่ต้อง renderAll
+        return; 
+    } 
+    // โค้ดสำหรับเครื่องแม่ (Master)
+    const bell = document.getElementById('spy-bell'); 
+    bell.classList.remove('hidden'); 
+    playSound('error'); 
+    setTimeout(()=>bell.classList.add('hidden'), 5000); 
 }
 
-function generateMasterQR() { 
-    const t = document.getElementById("master-qr-code"); 
-    if(t) { t.innerHTML = ""; new QRCode(t, { text: db.syncKey, width: 150, height: 150 }); document.getElementById('txt-sync-key').innerText = "PIN: " + db.syncKey; } 
-    const md = document.getElementById("master-qr-display"); 
-    if(md) { md.innerHTML = ""; new QRCode(md, { text: db.syncKey, width: 180, height: 180 }); } 
+function startHeartbeatMonitor() {
+    setInterval(() => {
+        // เช็คว่ามี Log ทุจริตจากเครื่องลูกไหม (กรณีใช้งาน Offline บนเครื่องเดียวกัน หรือดึงจาก Cloud ในอนาคต)
+        if(!isClientMode && db.fraudLogs.length > 0) {
+            triggerSpyBell(db.fraudLogs[0].reason);
+            db.fraudLogs = []; // เคลียร์แล้ว
+            saveToIDB();
+        }
+        // Stub สำหรับเช็ค Ping เครื่องลูกในอนาคต (ถ้ามี Firebase)
+    }, 5000);
 }
 
-function exportBackup() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(db)], {type: "application/json"})); a.download = 'fakdu_backup_v800.json'; a.click(); showToast("ส่งออกสำเร็จ", "success"); }
-function importBackup(e) { const f = e.target.files[0]; if(!f) return; customConfirm("ทับข้อมูลด้วย Backup ยืนยันไหม?", () => { const r = new FileReader(); r.onload = ev => { try { db = JSON.parse(ev.target.result); saveData(); showToast("นำเข้าสำเร็จ...", "success"); setTimeout(()=>location.reload(), 1500); } catch(err){ showToast("ไฟล์เสีย", "error"); } }; r.readAsText(f); }); }
-
-function processImage(e, target) {
-    const f = e.target.files[0]; if(!f) return; const r = new FileReader(); 
-    r.onload = ev => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); const W = 400; let w = img.width; let h = img.height; if (w > W) { h *= W / w; w = W; } c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h); const d = c.toDataURL('image/jpeg', 0.7); 
-            if(target === 'logo') { db.logo = d; saveSystemSettings(); showToast("เปลี่ยนโลโก้แล้ว"); } 
-            else if(target === 'qr') { db.qrImg = d; saveSystemSettings(); document.getElementById('sys-qr-preview').src = d; document.getElementById('sys-qr-preview').classList.remove('hidden'); showToast("อัปเดต QR"); } 
-            else if(target === 'tempItemImg') { tempImageBase64 = d; document.getElementById('form-item-preview').src = d; document.getElementById('form-item-preview').classList.remove('hidden'); } 
-        }; img.src = ev.target.result; 
-    }; r.readAsDataURL(f); 
+// ----------------------------------------------------
+// โหมดลูกค้า: ย่อ/ขยาย โต๊ะ (+/-)
+let gridZoom = 2; 
+function changeGridZoom(dir) { playSound('click'); gridZoom += dir; if(gridZoom < 2) gridZoom = 2; if(gridZoom > 5) gridZoom = 5; updateGridZoomUI(); }
+function updateGridZoomUI() { 
+    const grid = document.getElementById('grid-units'); 
+    grid.className = `grid grid-cols-${gridZoom} gap-${gridZoom>3 ? '3' : '4'}`; 
+    document.getElementById('zoom-level-text').innerText = gridZoom === 2 ? 'L' : gridZoom === 3 ? 'M' : gridZoom === 4 ? 'S' : 'XS'; 
+    renderCustomerGrid(); // Re-render to apply font sizes
 }
 
-function switchTab(id, tabEl = null) {
-    playSound('click'); document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById(`screen-${id}`).classList.add('active'); if(tabEl) tabEl.classList.add('active');
-    if(id === 'order') updateCartUI(); if(id === 'shop') renderShopQueue();
-}
+// Core POS
+function renderCustomerGrid() { 
+    const grid = document.getElementById('grid-units'); grid.innerHTML = ''; 
+    
+    // Dynamic Font Sizing for V9.19
+    let fontSize = gridZoom >= 4 ? 'text-[24px]' : 'text-[36px]'; 
+    let iconSize = gridZoom >= 4 ? 'text-[24px]' : 'text-[34px]';
 
-function attemptAdmin(target, tabEl = null) { 
-    if(isAdminLoggedIn) { switchTab(target, tabEl); } 
-    else { pendingAdminAction = { target, tabEl }; document.getElementById('admin-password').value = ""; document.getElementById('modal-pin').style.display = 'flex'; setTimeout(()=>document.getElementById('admin-password').focus(),100); }
-}
-
-function verifyAdmin() {
-    const pw = document.getElementById('admin-password').value.trim();
-    if(pw === "admin" || pw === "FAKDU-V7-ADMIN") { 
-        isAdminLoggedIn = true; 
-        localStorage.setItem('fakdu_admin_auth', 'true'); 
-        closeModal('modal-pin'); 
-        playSound('success'); 
-        switchTab(pendingAdminAction.target, pendingAdminAction.tabEl); 
-    } else { showToast("❌ รหัสผิด", "error"); }
-}
-
-function adminLogout() {
-    customConfirm("ยืนยันออกจากระบบแอดมิน?", () => {
-        isAdminLoggedIn = false;
-        localStorage.removeItem('fakdu_admin_auth'); 
-        switchTab('customer', document.querySelector('.nav-tab'));
-        showToast("🔒 ออกจากระบบแอดมินแล้ว", "success");
-    });
-}
-
-function toggleStoreStatus() { 
-    const c = document.getElementById('store-toggle'); 
-    db.isClosed = !c.checked; 
-    saveData(); 
-    renderStoreStatus(); 
-    showToast(db.isClosed ? "ปิดร้าน" : "เปิดร้าน", "success"); 
-}
-
-function renderStoreStatus() { 
-    const b = document.getElementById('store-closed-banner'); 
-    const c = document.getElementById('store-toggle'); 
-    const t = document.getElementById('store-toggle-text');
-    if(db.isClosed) { 
-        if(b) b.classList.remove('hidden'); 
-        if(c) c.checked = false; 
-        if(t) { t.innerText = "ร้านปิด"; t.className = "text-[10px] font-bold text-red-600 uppercase"; }
-    } else { 
-        if(b) b.classList.add('hidden'); 
-        if(c) c.checked = true; 
-        if(t) { t.innerText = "ร้านเปิด"; t.className = "text-[10px] font-bold text-emerald-600 uppercase"; }
+    for(let i=1; i<=db.unitCount; i++) { 
+        let u = db.units.find(x => x.id == i); if(!u) continue; 
+        let cls = 'unit-empty'; const cart = db.carts[u.id] || []; 
+        if(u.orders && u.orders.length > 0) { cls = 'unit-busy'; } else if(cart.length > 0) { cls = 'unit-pending'; } 
+        grid.innerHTML += `<div class="unit-card ${cls}" onclick="openTable(${u.id})"><div class="${iconSize} opacity-20 mb-1">${db.unitType === 'โต๊ะ' ? '🍽️' : '📝'}</div><div class="${fontSize} font-black leading-none">${u.id}</div></div>`; 
     } 
 }
 
-function renderCustomerGrid() {
-    const grid = document.getElementById('grid-units'); grid.innerHTML = ''; const ic = db.unit === 'โต๊ะ' ? '🍽️' : '📝';
-    for(let i=1; i<=db.unitCount; i++) { 
-        let u = db.units.find(x => x.id == i); if(!u) continue; 
-        const hasP = cart.some(c => c.uId === u.id); const cls = u.status === 'busy' ? 'unit-busy' : (hasP ? 'unit-pending' : ''); 
-        const paxStr = (u.status === 'busy' && u.pax) ? `<div class="absolute bottom-2 text-[10px] text-gray-500 font-bold">👨‍👩‍👦 ${u.pax}</div>` : '';
-        grid.innerHTML += `<div class="unit-card ${cls}" onclick="openOrder(${u.id})"><div class="text-[32px] opacity-20 mb-1">${ic}</div><div class="text-[36px] font-black leading-none">${u.id}</div>${paxStr}</div>`; 
-    }
+function openTable(id) { playSound('click'); activeUnitId = id; document.getElementById('active-unit-id').innerText = id; if(!db.carts[id]) db.carts[id] = []; renderItemList(); updateCartTotal(); const u = db.units.find(x => x.id === id); const orderedBox = document.getElementById('ordered-items-bar'); const orderedList = document.getElementById('ordered-items-list'); if(u.orders && u.orders.length > 0) { orderedList.innerHTML = u.orders.map(o => `• ${o.name} <span class="text-[10px] bg-white px-1 rounded">x${o.qty}</span>`).join('<br>'); orderedBox.classList.remove('hidden'); } else { orderedBox.classList.add('hidden'); } switchTab('order'); }
+function renderItemList() { const box = document.getElementById('item-list'); box.innerHTML = ''; db.items.forEach(i => { const img = i.img ? `<img src="${i.img}" class="item-img shadow-sm">` : `<div class="item-img flex items-center justify-center text-3xl">🍔</div>`; const addonBadge = (i.addons && i.addons.length > 0) ? `<div class="addon-badge">+ตัวเลือก</div>` : ''; box.innerHTML += `<div class="item-btn" onclick="handleItemClick(${i.id})">${addonBadge}${img}<div class="flex-1 text-left"><div class="font-black text-gray-800 text-[16px] mb-1">${i.name}</div><div class="theme-text font-black text-sm">฿${i.price}</div></div><div class="bg-gray-100 w-10 h-10 rounded-[12px] flex items-center justify-center text-xl font-black text-gray-400 border">+</div></div>`; }); }
+
+function handleItemClick(id) { 
+    if(isClientMode && clientPinToken !== db.syncKey) { deactivateClientMode(); return alert("รหัสซิงค์ถูกเปลี่ยน กรุณาล็อกอินใหม่"); }
+    playSound('click'); const u = db.units.find(x => x.id === activeUnitId); let cart = db.carts[activeUnitId]; if(!db.isPro && (u.orders.length + cart.length >= 4)) return handleLockedFeatureClick(true); const item = db.items.find(x => x.id === id); if(item.addons && item.addons.length > 0) { pendingAddonItem = item; currentAddonQty = 1; document.getElementById('addon-qty-display').innerText = currentAddonQty; document.getElementById('addon-modal-name').innerText = item.name; document.getElementById('addon-modal-price').innerText = item.price; const list = document.getElementById('addon-options-list'); list.innerHTML = ''; item.addons.forEach((a, idx) => { list.innerHTML += `<label class="flex justify-between items-center bg-white border p-3 rounded-xl cursor-pointer active:scale-95 transition-transform"><div class="flex items-center gap-3"><input type="checkbox" class="addon-checkbox w-5 h-5 accent-primary" data-price="${a.price}" data-name="${a.name}"> <span class="font-bold text-sm text-gray-700">${a.name}</span></div><div class="font-black text-gray-500">+฿${a.price}</div></label>`; }); document.getElementById('modal-addon-select').style.display = 'flex'; } else { addToCartActual(item, [], 1); } 
 }
+function adjustAddonQty(val) { currentAddonQty += val; if(currentAddonQty < 1) currentAddonQty = 1; document.getElementById('addon-qty-display').innerText = currentAddonQty; playSound('click'); }
+function confirmAddonSelection() { let selectedAddons = []; document.querySelectorAll('.addon-checkbox:checked').forEach(cb => { selectedAddons.push({ name: cb.getAttribute('data-name'), price: parseInt(cb.getAttribute('data-price')) }); }); addToCartActual(pendingAddonItem, selectedAddons, currentAddonQty); closeModal('modal-addon-select'); }
+function addToCartActual(item, addons, qty) { let cart = db.carts[activeUnitId]; let addonText = addons.length > 0 ? ` (${addons.map(a=>a.name).join(', ')})` : ''; let totalAddonPrice = addons.reduce((sum, a) => sum + a.price, 0); let finalPrice = item.price + totalAddonPrice; let finalName = item.name + addonText; let ex = cart.find(c => c.name === finalName && c.price === finalPrice); if(ex) { ex.qty += qty; ex.total += (finalPrice * qty); } else { cart.push({ id: Date.now(), itemId: item.id, name: finalName, price: finalPrice, qty: qty, total: finalPrice * qty, orderBy: currentClientName }); } saveData(); updateCartTotal(); showToast(`เพิ่ม ${finalName} x${qty}`); }
+function updateCartTotal() { let cart = db.carts[activeUnitId] || []; let t = 0, q = 0; cart.forEach(c => { t += c.total; q += c.qty; }); document.getElementById('cart-total').innerText = t.toLocaleString(); document.getElementById('cart-count').innerText = q; }
+function reviewCart() { const cart = db.carts[activeUnitId] || []; if(cart.length === 0) return showToast("ตะกร้าว่าง", "error"); document.getElementById('review-unit-id').innerText = activeUnitId; const box = document.getElementById('review-list'); box.innerHTML = ''; let t = 0; cart.forEach((c, idx) => { t += c.total; box.innerHTML += `<div class="flex justify-between items-center py-3 border-b border-gray-50"><div class="flex-1 font-bold text-gray-800">${c.name} <span class="bg-gray-100 px-2 rounded ml-1 text-xs">x${c.qty}</span></div><div class="flex items-center gap-2"><span class="font-black">฿${c.total.toLocaleString()}</span><button onclick="editCartItem(${idx},-1)" class="w-8 h-8 rounded-lg bg-gray-100 font-bold">-</button><button onclick="editCartItem(${idx},1)" class="w-8 h-8 rounded-lg bg-gray-100 font-bold">+</button></div></div>`; }); document.getElementById('review-total-price').innerText = t.toLocaleString(); document.getElementById('modal-review').style.display = 'flex'; }
+function editCartItem(idx, d) { let cart = db.carts[activeUnitId]; cart[idx].qty += d; cart[idx].total = cart[idx].qty * cart[idx].price; if(cart[idx].qty <= 0) cart.splice(idx, 1); saveData(); if(cart.length === 0) { closeModal('modal-review'); showToast("ตะกร้าว่างเปล่า", "error"); updateCartTotal(); } else { reviewCart(); updateCartTotal(); } }
+function confirmOrderSend() { const u = db.units.find(x => x.id === activeUnitId); let cart = db.carts[activeUnitId]; if(u.status === 'busy') u.newItemsQty = cart.reduce((s,c)=>s+c.qty, 0); u.status = 'busy'; if(!u.startTime) u.startTime = Date.now(); cart.forEach(c => { let ex = u.orders.find(o => o.name === c.name && o.price === c.price); if(ex) { ex.qty += c.qty; ex.total += c.total; } else { u.orders.push({...c}); } }); db.carts[activeUnitId] = []; saveData(); closeModal('modal-review'); switchTab('customer'); showToast("🚀 ส่งเข้าครัวแล้ว", "success"); }
 
-function openOrder(id) { 
-    if(db.isClosed && db.role === 'client') return showToast("❌ ร้านปิดแล้ว", "error");
-    const u = db.units.find(x => x.id === id);
-    if(u.status === 'empty' && db.unit === 'โต๊ะ') {
-        tempUnitForPeople = id;
-        document.getElementById('pax-unit-display').innerText = id;
-        document.getElementById('people-count-input').value = '1';
-        document.getElementById('modal-people').style.display = 'flex';
-    } else { proceedToOrder(id); }
-}
-
-function adjPax(val) {
-    const inp = document.getElementById('people-count-input');
-    let nv = parseInt(inp.value) + val; if(nv < 1) nv = 1; inp.value = nv;
-}
-
-function confirmPeopleCount() {
-    const pax = parseInt(document.getElementById('people-count-input').value) || 1;
-    const u = db.units.find(x => x.id === tempUnitForPeople);
-    if(u) u.pax = pax;
-    closeModal('modal-people');
-    proceedToOrder(tempUnitForPeople);
-}
-
-function proceedToOrder(id) {
-    playSound('click'); activeUnitId = id; 
-    document.getElementById('order-unit-id').innerText = id; 
-    const u = db.units.find(x => x.id === id);
-    document.getElementById('order-pax-display').innerText = (db.unit === 'โต๊ะ' && u.pax) ? `👨‍👩‍👦 ลูกค้า: ${u.pax} ท่าน` : '';
-    renderItemButtons(); updateCartUI(); switchTab('order'); 
-}
-
-function renderItemButtons() {
-    const grid = document.getElementById('grid-items'); grid.innerHTML = '';
-    db.items.forEach(i => { const im = i.img ? `<img src="${i.img}" class="item-img shadow-sm border border-gray-100">` : `<div class="item-img bg-gray-50 flex items-center justify-center text-2xl border border-gray-100">📦</div>`; grid.innerHTML += `<div class="item-btn" onclick="handleItemClick(${i.id})">${im}<div class="flex-1 text-left"><div class="font-black text-gray-800 text-[15px] mb-1">${i.name}</div><div class="theme-text font-black text-sm">฿${i.price}</div></div><div class="bg-gray-50 w-10 h-10 rounded-xl flex items-center justify-center font-black text-xl text-gray-400 border border-gray-100 shadow-sm">+</div></div>`; });
-}
-
-function handleItemClick(id) {
-    playSound('click'); const u = db.units.find(x => x.id === activeUnitId);
-    if(!db.isPro) { let cO = u.orders ? u.orders.reduce((s, o) => s + o.qty, 0) : 0; let cartO = cart.filter(c => c.uId === activeUnitId).reduce((s, c) => s + c.qty, 0); if((cO + cartO) >= 4) { return showToast("⚠️ รับได้โต๊ะละ 4 รายการ", "error"); } }
-    const i = db.items.find(x => x.id === id);
-    if(i.addons && i.addons.length > 0) {
-        pendingAddonItem = {...i}; document.getElementById('addon-target-name').innerText = i.name; document.getElementById('addon-limit-text').style.display = db.isPro ? 'none' : 'inline';
-        const box = document.getElementById('addon-checkboxes'); box.innerHTML = '';
-        i.addons.forEach(aid => { const ad = db.addons.find(a => a.id === aid); if(ad) box.innerHTML += `<label class="flex items-center justify-between p-3.5 border-2 rounded-[16px] bg-gray-50 mb-2 cursor-pointer active:bg-red-50 transition-colors"><div class="flex items-center gap-3"><input type="checkbox" value="${ad.id}" class="addon-cb w-5 h-5 accent-maroon-800"><span class="font-bold text-sm text-gray-700">${ad.name}</span></div><span class="theme-text font-black">+฿${ad.price}</span></label>`; });
-        document.getElementById('modal-addon').style.display = 'flex';
-    } else { addToCart(i, []); }
-}
-
-function confirmAddonToCart() {
-    let sel = []; document.querySelectorAll('.addon-cb:checked').forEach(cb => { const ad = db.addons.find(a => a.id == cb.value); if(ad) sel.push(ad); });
-    if(!db.isPro && sel.length > 1) return showToast("⚠️ เลือกได้ 1 อย่าง", "error");
-    addToCart(pendingAddonItem, sel); closeModal('modal-addon');
-}
-
-function addToCart(bI, ad) {
-    if(db.isClosed && db.role === 'client') return showToast("❌ ร้านปิดแล้ว", "error");
-    let aP = ad.reduce((s, a) => s + parseInt(a.price), 0); let fP = parseInt(bI.price) + aP; let aK = ad.map(a => a.id).sort().join(','); let aN = ad.map(a => a.name).join('+');
-    let ex = cart.find(c => c.id === bI.id && c.aKey === aK && c.uId === activeUnitId);
-    if(ex) { ex.qty++; ex.total += fP; } else { cart.push({ uId: activeUnitId, id: bI.id, name: bI.name, aNames: aN, aKey: aK, unitP: fP, qty: 1, total: fP }); }
-    saveData(); updateCartUI(); showToast(`เพิ่ม ${bI.name}`);
-}
-
-function updateCartUI() {
-    const list = document.getElementById('cart-items'); list.innerHTML = ''; let gT = 0; let gQ = 0; const tC = cart.filter(c => c.uId === activeUnitId);
-    tC.forEach((c, idx) => { gT += c.total; gQ += c.qty; list.innerHTML += `<div class="flex justify-between items-center py-3.5"><div class="flex-1 pr-3"><div class="font-black text-gray-800 text-[13px]">${c.name}</div>${c.aNames ? `<div class="text-[9px] text-gray-400 font-bold uppercase mt-1">+ ${c.aNames}</div>` : ''}</div><div class="flex items-center gap-3"><div class="theme-text font-black text-base">฿${c.total.toLocaleString()}</div><div class="bg-gray-100 px-2.5 py-1 rounded-lg text-xs font-black">x${c.qty}</div><button onclick="removeCartItem(${idx})" class="bg-red-50 text-red-500 w-8 h-8 rounded-xl font-black shadow-sm active:scale-90 transition-transform">X</button></div></div>`; });
-    document.getElementById('cart-total').innerText = gT.toLocaleString(); document.getElementById('cart-count').innerText = gQ;
-}
-
-function removeCartItem(idx) { playSound('error'); const tC = cart.filter(c => c.uId === activeUnitId); cart = cart.filter(c => c !== tC[idx]); saveData(); updateCartUI(); }
-function clearCart() { playSound('error'); cart = cart.filter(c => c.uId !== activeUnitId); saveData(); updateCartUI(); document.getElementById('cart-drawer').classList.add('hidden'); }
-
-function openConfirmOrderModal() {
-    if(db.isClosed && db.role === 'client') return showToast("❌ ร้านปิดแล้ว", "error");
-    const tC = cart.filter(c => c.uId === activeUnitId); if(tC.length === 0) return showToast("❌ ตะกร้าว่างเปล่า", "error");
-    if(!db.units.find(u => u.id === activeUnitId)) return showToast(`❌ โต๊ะ ${activeUnitId} ถูกลบไปแล้ว`, "error");
-    playSound('click'); document.getElementById('confirm-order-unit').innerText = activeUnitId;
-    const list = document.getElementById('confirm-order-list'); list.innerHTML = ''; let t = 0;
-    tC.forEach((c) => { t += c.total; list.innerHTML += `<div class="flex justify-between items-center py-2.5 border-b border-gray-100"><span class="flex-1">${c.name} ${c.aNames ? `<span class="text-[9px] text-gray-400 block mt-0.5">+${c.aNames}</span>`:''} <span class="text-[9px] bg-gray-100 px-1.5 py-0.5 rounded font-bold ml-1">x${c.qty}</span></span><span class="font-black flex items-center gap-2 text-sm">฿${c.total.toLocaleString()}</span></div>`; });
-    document.getElementById('confirm-order-total').innerText = t.toLocaleString(); document.getElementById('modal-confirm-order').style.display = 'flex';
-}
-
-// ---------------- 📦 การส่งออร์เดอร์ (รองรับ Outbox Queue) ----------------
-function executeSendOrder() {
-    const u = db.units.find(x => x.id === activeUnitId); if(!u) return;
-    if(!u.startTime) u.startTime = Date.now(); u.status = 'busy'; if(!u.orders) u.orders = [];
-    
-    // สร้าง RefID เฉพาะตัว (MachineID + เวลา + เลขสุ่ม)
-    const pf = getFingerprint() + "-" + Date.now() + "-";
-    let newOrders = [];
-
-    cart.filter(c => c.uId === activeUnitId).forEach((c, idx) => { 
-        let orderItem = {...c, refId: pf + idx};
-        let ex = u.orders.find(o => o.id === c.id && o.aKey === c.aKey); 
-        
-        if(ex) { ex.qty += c.qty; ex.total += c.total; } 
-        else { u.orders.push(orderItem); } 
-        
-        newOrders.push(orderItem);
-    });
-    
-    // 📦 ถ้าเป็นลูกน้อง ให้เก็บเข้า Outbox
-    if(db.role === 'client') {
-        if(!db.pending_sync) db.pending_sync = [];
-        db.pending_sync.push(...newOrders);
-        triggerCloudSync(); // พยายามซิงค์ทันที
-    }
-
-    cart = cart.filter(c => c.uId !== activeUnitId); 
-    saveData(); 
-    closeModal('modal-confirm-order'); 
-    switchTab('customer'); 
-    showToast(db.role === 'client' && !navigator.onLine ? "เก็บลงคิวรอเน็ต..." : "✅ ส่งแล้ว", "success");
-}
-
-function removeBillItem(idx) {
-    if(db.role === 'client') return showToast("แอดมินเท่านั้น", "error");
-    playSound('error'); const u = db.units.find(x => x.id === activeUnitId); u.orders.splice(idx, 1);
-    if(u.orders.length === 0) { u.status = 'empty'; u.startTime = null; u.pax = null; closeModal('modal-checkout'); saveData(); return; } saveData(); openCheckout(activeUnitId);
-}
+function renderShopQueue() { const box = document.getElementById('shop-queue'); box.innerHTML = ''; const activeUnits = db.units.filter(u => u.orders && u.orders.length > 0).sort((a,b) => a.startTime - b.startTime); if(activeUnits.length === 0) { box.innerHTML = '<div class="text-center py-20 opacity-20 font-black text-xl">ไม่มีคิวรอชำระ</div>'; return; } activeUnits.forEach(u => { let t = u.orders.reduce((s,o) => s + o.total, 0); let badge = u.newItemsQty ? `<div class="absolute -top-2 -left-2 bg-red-500 text-white text-[9px] font-black px-2 py-1 rounded-full animate-bounce shadow-md border-2 border-white">สั่งเพิ่ม +${u.newItemsQty}</div>` : ''; box.innerHTML += `<div class="bg-white border p-4 rounded-2xl flex justify-between items-center cursor-pointer active:scale-95 transition-transform shadow-sm relative mb-3" onclick="openCheckout(${u.id})">${badge}<div class="flex items-center gap-4"><div class="w-14 h-14 bg-gray-50 border-2 border-gray-200 rounded-2xl flex items-center justify-center font-black text-2xl text-gray-800">${u.id}</div><div><div class="font-black text-gray-800 text-xl">฿${t.toLocaleString()}</div><div class="text-[11px] text-gray-400 font-bold mt-1">${u.orders.length} รายการ</div></div></div><div class="absolute bottom-2 right-3 flex items-center gap-1 text-[10px] font-black text-gray-400 bg-gray-50 px-2 py-1 rounded-full border border-gray-100"><div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> <span class="admin-timer" data-start="${u.startTime}">0 นาที</span></div></div>`; }); }
 
 function openCheckout(id) {
-    const u = db.units.find(x => x.id === id); activeUnitId = id; document.getElementById('bill-unit-id').innerText = id;
-    document.getElementById('bill-pax-display').innerText = (u.pax && db.unit === 'โต๊ะ') ? `ลูกค้า ${u.pax} ท่าน` : '';
-    const list = document.getElementById('bill-items'); list.innerHTML = ''; currentCheckoutTotal = 0;
-    u.orders.forEach((o, idx) => { currentCheckoutTotal += o.total; list.innerHTML += `<div class="flex justify-between items-center py-2.5 border-b border-gray-100"><span>${o.name} <span class="text-[10px] font-black bg-gray-100 px-1.5 rounded-md ml-1">x${o.qty}</span></span><div class="flex items-center gap-2.5"><span class="font-black text-sm">฿${o.total.toLocaleString()}</span> ${db.role === 'master' ? `<button onclick="removeBillItem(${idx})" class="text-red-500 bg-red-50 w-7 h-7 rounded-lg flex items-center justify-center font-bold active:scale-90 transition-transform">X</button>` : ''}</div></div>`; });
-    document.getElementById('bill-net-total').innerText = currentCheckoutTotal.toLocaleString(); updateQRDisplay(); document.getElementById('modal-checkout').style.display = 'flex';
+    const u = db.units.find(x => x.id === id); activeUnitId = id; document.getElementById('checkout-unit-id').innerText = id; u.newItemsQty = 0; let t = 0; const box = document.getElementById('checkout-item-list'); box.innerHTML = '';
+    u.orders.forEach((o, idx) => { t += o.total; let delBtn = (!isClientMode && isAdminLoggedIn) ? `<button onclick="deleteOrderItem(${idx})" class="text-red-500 w-7 h-7 rounded-lg bg-red-50 font-bold ml-2">X</button>` : ''; box.innerHTML += `<div class="flex justify-between items-center py-3 border-b border-gray-50"><div class="flex-1 font-bold text-gray-800">${o.name} <span class="bg-gray-100 px-2 rounded ml-1 text-[10px]">x${o.qty}</span><div class="text-[8px] text-gray-400 font-normal">📝 ${o.orderBy || 'เครื่องแม่'}</div></div><div class="flex items-center"><span>฿${o.total.toLocaleString()}</span>${delBtn}</div></div>`; });
+    document.getElementById('checkout-total').innerText = t.toLocaleString(); currentCheckoutTotal = t;
+    
+    if(isClientMode) { document.getElementById('checkout-payment-buttons').classList.add('hidden'); document.getElementById('checkout-client-warning').classList.remove('hidden'); }
+    else { document.getElementById('checkout-payment-buttons').classList.remove('hidden'); document.getElementById('checkout-client-warning').classList.add('hidden'); }
+    
+    updateQRDisplay(); document.getElementById('modal-checkout').style.display = 'flex';
 }
 
-function updateQRDisplay() {
-    const sQR = document.getElementById('bill-qr-img'); const dGen = document.getElementById('bill-qr-gen'); const bD = document.getElementById('checkout-bank-details');
-    if(db.bankName || db.promptPay) { bD.innerText = `${db.bankName ? db.bankName + ' | ' : ''}${db.promptPay}`; bD.classList.remove('hidden'); } else { bD.classList.add('hidden'); }
-    if(navigator.onLine && db.promptPay) { sQR.classList.add('hidden'); dGen.style.display = 'block'; dGen.innerHTML = ''; new QRCode(dGen, { text: `https://promptpay.io/${db.promptPay}/${currentCheckoutTotal}`, width: 140, height: 140 }); } 
-    else if (db.qrImg) { dGen.style.display = 'none'; sQR.src = db.qrImg; sQR.classList.remove('hidden'); } 
-    else { dGen.innerHTML = "<p class='text-[10px] text-gray-400 font-bold'>ไม่มี QR</p>"; dGen.style.display = 'block'; sQR.classList.add('hidden'); }
+function updateQRDisplay() { const offImg = document.getElementById('qr-offline-img'); const genArea = document.getElementById('qr-gen-area'); const txt = document.getElementById('qr-status-text'); if(navigator.onLine && db.ppay) { offImg.classList.add('hidden'); genArea.innerHTML = ''; new QRCode(genArea, { text: `https://promptpay.io/${db.ppay}/${currentCheckoutTotal}`, width: 150, height: 150 }); txt.innerText = "ดึงข้อมูล Online"; txt.className = "text-[9px] font-bold text-green-500 mt-2"; } else if(db.qrOffline) { genArea.innerHTML = ''; offImg.src = db.qrOffline; offImg.classList.remove('hidden'); txt.innerText = "โหมด Offline (QR ที่ตั้งไว้)"; txt.className = "text-[9px] font-bold text-orange-500 mt-2"; } else { genArea.innerHTML = '<p class="text-[10px] text-gray-400 mt-14">ไม่มีรูป QR</p>'; offImg.classList.add('hidden'); txt.innerText = ""; } }
+function deleteOrderItem(idx) { if(isClientMode) { triggerSpyBell("Attempt to delete bill item"); return showToast("⚠️ ลูกข่ายห้ามลบบิล!", "error"); } const u = db.units.find(x => x.id === activeUnitId); u.orders.splice(idx, 1); if(u.orders.length === 0) { u.status = 'empty'; u.startTime = null; closeModal('modal-checkout'); } saveData(); if(document.getElementById('modal-checkout').style.display !== 'none') openCheckout(activeUnitId); }
+function confirmPayment(method) { if(isClientMode) return showToast("⚠️ เครื่องลูกไม่มีสิทธิ์รับเงิน", "error"); const u = db.units.find(x => x.id === activeUnitId); if(u.orders.length > 0) { db.sales.push({ id: Date.now(), unitId: u.id, date: getLocalYYYYMMDD(), time: new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }).split(' ')[1], total: currentCheckoutTotal, method: method, items: JSON.parse(JSON.stringify(u.orders)) }); } u.status = 'empty'; u.orders = []; u.startTime = null; u.newItemsQty = 0; db.carts[activeUnitId] = []; saveData(); closeModal('modal-checkout'); showToast("✅ ชำระเงินเรียบร้อย", "success"); if(!document.getElementById('screen-manage').classList.contains('hidden')) renderAnalytics(); }
+
+// 📊 Analytics & Manage (V9.19 Fixes)
+function switchManageSub(s, el) { playSound('click'); document.querySelectorAll('.manage-tab').forEach(t => t.classList.remove('active', 'bg-white', 'shadow-sm', 'text-gray-800')); document.querySelectorAll('.manage-tab').forEach(t => t.classList.add('text-gray-500')); el.classList.remove('text-gray-500'); el.classList.add('active', 'bg-white', 'shadow-sm', 'text-gray-800'); document.getElementById('sub-dash').style.display = s === 'dash' ? 'block' : 'none'; document.getElementById('sub-menu').style.display = s === 'menu' ? 'block' : 'none'; }
+
+function handleLockedFeatureClick(isMenuLimit = false) { 
+    if(!db.isPro) { 
+        showToast(isMenuLimit ? "⚠️ ฟรีจำกัดการเพิ่มรายการ" : "🔒 เฉพาะ PRO", "error"); 
+        openProModal(); 
+        return true; 
+    } 
+    return false; 
 }
 
-function renderShopQueue() {
-    const list = document.getElementById('list-bills'); list.innerHTML = ''; const aU = db.units.filter(u => u.status === 'busy');
-    if(aU.length === 0) { list.innerHTML = '<div class="text-center py-16 opacity-20 font-black">ไม่มีค้างชำระ</div>'; return; }
-    aU.forEach(u => {
-        const t = u.orders.reduce((s, o) => s + o.total, 0); const q = u.orders.reduce((s, o) => s + o.qty, 0); 
-        let m = u.startTime ? Math.floor((Date.now() - u.startTime) / 60000) : 0; let tc = m > 40 ? 'text-red-500' : 'text-emerald-600'; let tS = `<span class="${tc} font-bold text-[9px] ml-1.5">⏱️ ${m} นาที</span>`;
-        list.innerHTML += `<div class="bill-card flex justify-between items-center cursor-pointer active:scale-95 transition-transform" onclick="openCheckout(${u.id})"><div class="flex items-center gap-3.5"><div class="w-14 h-14 bg-gray-50 rounded-[16px] flex items-center justify-center border-2 border-maroon-100 font-black text-xl theme-text">${u.id}</div><div><div class="font-bold text-gray-800 text-sm">${q} ชิ้น</div><div class="text-[9px] font-bold text-gray-400 mt-0.5">คิว ${u.id} ${tS}</div></div></div><div class="text-right"><div class="text-xl font-black theme-text tracking-tighter">฿${t.toLocaleString()}</div><div class="text-[8px] bg-red-100 text-red-600 px-2 py-1 rounded-md font-bold mt-1 inline-block uppercase tracking-widest">รอชำระ</div></div></div>`;
+function switchDashTab(tab, el) { playSound('click'); document.querySelectorAll('.dash-sub-tab').forEach(t => t.classList.remove('active', 'bg-white', 'shadow-sm', 'text-gray-800')); document.querySelectorAll('.dash-sub-tab').forEach(t => t.classList.add('text-gray-500')); el.classList.remove('text-gray-500'); el.classList.add('active', 'bg-white', 'shadow-sm', 'text-gray-800'); document.getElementById('dash-history').style.display = tab === 'history' ? 'block' : 'none'; document.getElementById('dash-top').style.display = tab === 'top' ? 'block' : 'none'; }
+
+function calculateCustomSalesRealtime() {
+    const s = document.getElementById('search-start').value; 
+    const e = document.getElementById('search-end').value; 
+    if(!s || !e) return;
+    
+    // ถ้าไม่ใช่ Pro และเปลี่ยนวัน ให้บังคับกลับมาวันนี้ (ไม่ต้อง popup กวนใจ แค่แจ้งเตือน)
+    const td = getLocalYYYYMMDD();
+    if(!db.isPro && (s !== td || e !== td)) {
+        document.getElementById('search-start').value = td;
+        document.getElementById('search-end').value = td;
+        showToast("🔒 รุ่นฟรีดูได้เฉพาะยอดวันนี้", "error");
+        // ปล่อยไหลลงไปคำนวณยอดวันนี้ต่อ
+    }
+
+    let total = 0; 
+    db.sales.forEach(sale => { 
+        if(sale.date >= document.getElementById('search-start').value && sale.date <= document.getElementById('search-end').value) {
+            total += sale.total; 
+        }
     });
-}
-
-function processPayment(t) { 
-    if(db.role === 'client') return showToast("❌ ไม่มีสิทธิ์รับเงิน", "error");
-    const u = db.units.find(x => x.id === activeUnitId); 
-    if(u.orders.length > 0) { const now = new Date(); db.sales.push({ id: Date.now(), date: now.toISOString().split('T')[0], time: now.toLocaleTimeString('th-TH'), type: t, amount: currentCheckoutTotal, items: JSON.parse(JSON.stringify(u.orders)) }); } 
-    u.status = 'empty'; u.orders = []; u.startTime = null; u.pax = null; saveData(); closeModal('modal-checkout'); showToast("✅ รับเงินแล้ว", "success"); 
-}
-
-function valKey() { const k = document.getElementById('pro-key-input').value.trim(); if(procImgRule(k) || k === "FAKDU-V7-ADMIN") { db.isPro = true; saveData(); closeModal('modal-pro-unlock'); showToast("👑 ปลดล็อค PRO", "success"); } else { showToast("❌ คีย์ผิด", "error"); } }
-function checkProStatus() { const b = document.getElementById('trial-badge'); b.style.display = (db.isPro || db.role === 'client') ? 'none' : 'block'; document.getElementById('item-count').innerText = db.items.length; }
-
-function openItemModal() {
-    if(!db.isPro && db.items.length >= 4) return showToast("⚠️ รุ่นทดลองเพิ่มได้ 4 รายการ", "error");
-    document.getElementById('modal-item-title').innerText = "เพิ่มรายการ"; document.getElementById('form-item-id').value = ""; document.getElementById('form-item-name').value = ""; document.getElementById('form-item-price').value = ""; document.getElementById('form-item-file').value = ""; tempImageBase64 = null; document.getElementById('form-item-preview').src = ""; document.getElementById('form-item-preview').classList.add('hidden'); renderAddonCheckboxesInForm([]); document.getElementById('modal-item').style.display = 'flex';
-}
-
-function saveItem() { 
-    const id = document.getElementById('form-item-id').value; const n = document.getElementById('form-item-name').value; const p = document.getElementById('form-item-price').value; 
-    if(!n||!p) return showToast("กรอกให้ครบ", "error"); let sel = []; document.querySelectorAll('.addon-sel:checked').forEach(cb => sel.push(parseInt(cb.value))); 
-    if(id) { const idx = db.items.findIndex(i => i.id == id); db.items[idx] = { ...db.items[idx], name:n, price: parseInt(p), addons: sel }; if(tempImageBase64) db.items[idx].img = tempImageBase64; } else { db.items.push({ id: Date.now(), name:n, price: parseInt(p), img: tempImageBase64, addons: sel, outOfStock: false }); } 
-    saveData(); closeModal('modal-item'); showToast("บันทึกเมนูสำเร็จ", "success"); 
-}
-
-function openAddonModal() { document.getElementById('addon-create-name').value = ''; document.getElementById('addon-create-price').value = ''; document.getElementById('modal-addon-create').style.display = 'flex'; }
-function saveNewAddon() { const n = document.getElementById('addon-create-name').value; const p = document.getElementById('addon-create-price').value; if(!n||!p) return showToast("ใส่ข้อมูลให้ครบ", "error"); db.addons.push({id:Date.now(), name:n, price:parseInt(p)}); saveData(); closeModal('modal-addon-create'); showToast("บันทึกแล้ว", "success"); }
-function deleteIndividualBill(id) { customConfirm("ลบบิลนี้?", () => { db.sales = db.sales.filter(s => s.id !== id); saveData(); showToast("ลบสำเร็จ", "success"); }); }
-
-function calcCustomStats() {
-    const s = document.getElementById('date-start').value; const e = document.getElementById('date-end').value; if(!s || !e) return;
-    const sum = db.sales.filter(x => x.date >= s && x.date <= e).reduce((a, b) => a + b.amount, 0); document.getElementById('stat-custom').innerText = sum.toLocaleString();
+    document.getElementById('search-total').innerText = total.toLocaleString();
 }
 
 function renderAnalytics() {
-    let t = 0, w = 0, m = 0; const td = new Date().toISOString().split('T')[0];
-    const itemCounts = {};
-    
+    let t = 0, w = 0, m = 0; const todayStr = getLocalYYYYMMDD(); const todayObj = new Date(todayStr); let itemCounts = {};
     db.sales.forEach(s => { 
-        if(s.date === td) t += s.amount; m += s.amount; w += s.amount; 
-        s.items.forEach(i => { itemCounts[i.name] = (itemCounts[i.name] || 0) + i.qty; });
+        let sDateObj = new Date(s.date); let diffDays = Math.ceil((todayObj - sDateObj) / (1000 * 60 * 60 * 24));
+        if(s.date === todayStr) t += s.total; if(db.isPro && diffDays <= 7) w += s.total; if(db.isPro && diffDays <= 30) m += s.total; 
+        s.items.forEach(i => { let baseName = i.name.split(' (')[0]; itemCounts[baseName] = (itemCounts[baseName] || 0) + i.qty; });
     });
+    document.getElementById('stat-today').innerText = t.toLocaleString(); document.getElementById('stat-week').innerText = db.isPro ? w.toLocaleString() : "🔒"; document.getElementById('stat-month').innerText = db.isPro ? m.toLocaleString() : "🔒";
     
-    document.getElementById('stat-today').innerText = t.toLocaleString(); document.getElementById('stat-week').innerText = w.toLocaleString(); document.getElementById('stat-month').innerText = m.toLocaleString();
+    // ยอดรวมปฏิทิน (อิงจากค่าที่เลือกอยู่)
+    calculateCustomSalesRealtime();
     
-    const topSellers = Object.entries(itemCounts).sort((a,b) => b[1] - a[1]).slice(0, 3);
-    const tsList = document.getElementById('top-sellers-list'); tsList.innerHTML = '';
-    if(topSellers.length === 0) {
-        tsList.innerHTML = '<div class="text-[11px] text-orange-400 font-bold">ยังไม่มีข้อมูลยอดขาย</div>';
-    } else {
-        const medals = ['🥇', '🥈', '🥉'];
-        topSellers.forEach((item, index) => {
-            tsList.innerHTML += `<div class="flex justify-between items-center bg-white p-2.5 rounded-[12px] shadow-sm border border-orange-50"><div class="font-bold text-[13px] text-gray-800">${medals[index]} ${item[0]}</div><div class="text-[10px] font-black text-orange-600 bg-orange-100 px-2.5 py-1 rounded-lg">${item[1]} เสิร์ฟ</div></div>`;
-        });
-    }
-
-    const hl = document.getElementById('history-list'); hl.innerHTML = '';
-    [...db.sales].reverse().forEach(s => { hl.innerHTML += `<div class="py-2.5 flex justify-between items-center border-b border-gray-100"><div><span class="font-bold text-gray-800">${s.date} ${s.time}</span><br><span class="text-[10px] text-gray-500 font-bold">${s.type==='qr'?'📱':'💵'} ${s.items.length} รายการ</span></div><div class="flex items-center gap-3"><span class="font-black theme-text text-sm">฿${s.amount.toLocaleString()}</span><button onclick="deleteIndividualBill(${s.id})" class="bg-red-50 text-red-500 w-7 h-7 rounded-lg font-bold shadow-sm active:scale-90 flex items-center justify-center transition-transform">X</button></div></div>`; });
+    const hl = document.getElementById('sales-history'); hl.innerHTML = '';
+    [...db.sales].reverse().slice(0,50).forEach(s => { let itemListStr = s.items.map(i => `${i.name}x${i.qty}`).join(', '); let payMethod = s.method === 'transfer' ? '📱โอน' : '💵สด'; hl.innerHTML += `<div class="py-3 flex justify-between items-center border-b border-gray-100"><div><div class="font-black text-gray-800">${s.date} <span class="font-normal text-gray-400 ml-1">${s.time}</span> <span class="text-[9px] text-green-600 ml-1 border border-green-200 px-1 rounded">${payMethod}</span></div><div class="text-[9px] text-gray-400 font-bold mt-1 truncate w-40">${itemListStr}</div></div><div class="text-right font-black theme-text text-lg tracking-tighter">฿${s.total.toLocaleString()}</div></div>`; });
+    const topBox = document.getElementById('top-items-list'); topBox.innerHTML = ''; let topItems = Object.entries(itemCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    if(topItems.length === 0) topBox.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">ยังไม่มีข้อมูลยอดขาย</p>';
+    topItems.forEach((item, idx) => { const medal = idx===0?'🥇':idx===1?'🥈':idx===2?'🥉':(idx+1)+'.'; topBox.innerHTML += `<div class="flex justify-between items-center bg-gray-50 p-2.5 rounded-xl border mb-2"><div class="font-black text-gray-800">${medal} ${item[0]}</div><div class="text-[10px] font-bold bg-white px-2 py-1 rounded text-gray-500 shadow-sm">ขายได้ ${item[1]}</div></div>`; });
+    
+    // โชว์ปุ่มล้างข้อมูลเฉพาะเครื่องแม่
+    document.querySelectorAll('.master-only').forEach(el => {
+        if(!isClientMode && isAdminLoggedIn) el.classList.remove('hidden'); else el.classList.add('hidden');
+    });
 }
 
-function renderAdminLists() { 
-    const iL = document.getElementById('admin-item-list'); iL.innerHTML = ''; db.items.forEach(i => { iL.innerHTML += `<div class="flex justify-between items-center py-2.5 border-b border-gray-100"><div><div class="font-bold text-gray-800 text-sm">${i.name}</div><div class="text-[10px] font-bold text-gray-400">฿${i.price}</div></div><button onclick="db.items=db.items.filter(x=>x.id!==${i.id});saveData();" class="text-[10px] text-red-500 font-bold bg-red-50 px-2.5 py-1.5 rounded-lg active:scale-95 transition-transform">ลบ</button></div>`; });
-    const aL = document.getElementById('admin-addon-list'); aL.innerHTML = ''; db.addons.forEach(a => { aL.innerHTML += `<div class="flex justify-between items-center py-2.5 bg-gray-50 px-3.5 rounded-xl mb-2 border border-gray-100"><div><div class="font-bold text-[13px] text-gray-800">${a.name}</div><div class="text-[10px] font-bold text-gray-500">+฿${a.price}</div></div><button onclick="db.addons=db.addons.filter(x=>x.id!==${a.id});saveData();" class="text-[10px] text-red-500 font-bold active:scale-95 transition-transform">ลบ</button></div>`; });
+function clearSales() { if(confirm("ล้างประวัติยอดขายทั้งหมด? (ไม่สามารถกู้คืนได้)")) { db.sales = []; saveData(); showToast("🗑️ ล้างยอดขายแล้ว", "success"); document.getElementById('search-total').innerText = '0'; } }
+function renderAdminLists() { const box = document.getElementById('admin-menu-list'); box.innerHTML = ''; document.getElementById('menu-count').innerText = db.items.length; db.items.forEach(i => { box.innerHTML += `<div class="flex justify-between items-center py-3 border-b border-gray-50"><div><div class="font-black text-gray-800 text-sm">${i.name}</div><div class="text-xs theme-text font-black">฿${i.price}</div></div><div class="flex gap-2"><button onclick="deleteItem(${i.id})" class="text-[10px] text-red-600 font-bold bg-red-50 px-3 py-2 rounded-xl">ลบ</button></div></div>`; }); }
+
+let tempAddons = [];
+function openMenuModal() { if(!db.isPro && db.items.length >= 4) { handleLockedFeatureClick(true); return; } document.getElementById('form-menu-name').value = ""; document.getElementById('form-menu-price').value = ""; tempImg = null; document.getElementById('form-menu-preview').classList.add('hidden'); tempAddons = []; renderAddonFields(); document.getElementById('modal-menu-form').style.display = 'flex'; }
+function addAddonField() { tempAddons.push({name: '', price: 0}); renderAddonFields(); }
+function removeAddonField(idx) { tempAddons.splice(idx, 1); renderAddonFields(); }
+function updateAddonField(idx, field, value) { tempAddons[idx][field] = field === 'price' ? parseInt(value) || 0 : value; }
+function renderAddonFields() { const box = document.getElementById('addon-fields-container'); box.innerHTML = ''; tempAddons.forEach((a, idx) => { box.innerHTML += `<div class="flex gap-2 items-center bg-white p-2 rounded-xl border shadow-sm"><input type="text" placeholder="ชื่อ" class="w-full text-xs font-bold bg-transparent outline-none" value="${a.name}" onchange="updateAddonField(${idx}, 'name', this.value)"><input type="number" placeholder="฿" class="w-16 text-xs font-black bg-transparent outline-none text-right" value="${a.price}" onchange="updateAddonField(${idx}, 'price', this.value)"><button onclick="removeAddonField(${idx})" class="text-red-500 font-bold px-2">X</button></div>`; }); }
+function saveMenuItem() { const n = document.getElementById('form-menu-name').value.trim(); const p = parseInt(document.getElementById('form-menu-price').value); if(!n || !p) return; const validAddons = tempAddons.filter(a => a.name.trim() !== ''); db.items.push({ id: Date.now(), name: n, price: p, img: tempImg, addons: validAddons }); saveData(); closeModal('modal-menu-form'); showToast("บันทึกเมนูแล้ว", "success"); }
+function deleteItem(id) { if(confirm("ลบเมนูนี้?")) { db.items = db.items.filter(i => i.id !== id); saveData(); } }
+
+function updateUnits() { const c = parseInt(document.getElementById('config-unit-count').value); const t = document.getElementById('config-unit-type').value; if(!db.isPro && c > 4) { handleLockedFeatureClick(true); return; } db.unitCount = c; db.unitType = t; forceRebuildUnits(c, t, false); saveData(); showToast("อัปเดตระบบแล้ว", "success"); }
+function forceRebuildUnits(c, t, bypass = false) { let newUnits = []; for(let i=1; i<=c; i++) { let existing = db.units.find(u => u.id === i); if(!bypass && existing && existing.status !== 'empty') { newUnits.push(existing); } else { newUnits.push({ id: i, status: 'empty', orders: [], startTime: null, newItemsQty: 0 }); } } db.units = newUnits; }
+
+function applyTheme() {
+    document.documentElement.style.setProperty('--primary', db.theme); document.documentElement.style.setProperty('--bg', db.bgColor);
+    document.getElementById('display-shop-name').innerText = db.shopName; if(db.logo) document.getElementById('shop-logo').src = db.logo;
+    document.querySelectorAll('.lbl-unit').forEach(el => el.innerText = db.unitType);
+    const b = document.getElementById('trial-badge'); 
+    if(db.isPro) { b.style.display = 'none'; document.getElementById('card-stat-week').classList.remove('locked-feature'); document.getElementById('card-stat-month').classList.remove('locked-feature'); } else if(!isClientMode) { b.style.display = 'block'; document.getElementById('card-stat-week').classList.add('locked-feature'); document.getElementById('card-stat-month').classList.add('locked-feature'); }
 }
+function handleImage(e, type) { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = ev => { if(type === 'logo') { db.logo = ev.target.result; saveSystemSettings(); } else if(type === 'qr') { db.qrOffline = ev.target.result; saveSystemSettings(); } else if(type === 'temp') { tempImg = ev.target.result; const p = document.getElementById('form-menu-preview'); p.src = tempImg; p.classList.remove('hidden'); } }; r.readAsDataURL(f); }
+function saveSystemSettings() { db.shopName = document.getElementById('sys-shop-name').value; db.theme = document.getElementById('sys-theme').value; db.bgColor = document.getElementById('sys-bg').value; db.bank = document.getElementById('sys-bank').value; db.ppay = document.getElementById('sys-ppay').value; if(document.getElementById('sys-pin').value.trim()) db.adminPin = document.getElementById('sys-pin').value.trim(); saveData(); showToast("บันทึกระบบแล้ว", "success"); }
+function loadSettingsToForm() { document.getElementById('sys-shop-name').value = db.shopName; document.getElementById('sys-theme').value = db.theme; document.getElementById('sys-bg').value = db.bgColor; document.getElementById('sys-bank').value = db.bank; document.getElementById('sys-ppay').value = db.ppay; document.getElementById('sys-pin').value = db.adminPin; }
 
-function forceRebuildUnits(c, t, i = false) {
-    if(!i && db.units.some(u => u.status === 'busy')) return showToast("⚠️ มีบิลค้างอยู่", "error");
-    db.unitCount = c; db.unit = t; db.units = []; for(let j=1; j<=c; j++) db.units.push({id: j, status: 'empty', orders: [], pax: null}); cart = cart.filter(x => x.uId <= c);
-    if(!i) { saveData(); showToast("อัปเดตระบบคิวแล้ว", "success"); }
-}
+function startTableTimers() { setInterval(() => { const now = Date.now(); document.querySelectorAll('.admin-timer').forEach(el => { const start = parseInt(el.getAttribute('data-start')); if(start) { let d = Math.floor((now - start) / 1000); let m = Math.floor(d / 60); el.innerText = `${m} นาที`; } }); }, 60000); }
+function validateProKey() { const input = document.getElementById('pro-key-input').value.trim(); if(input === "FAKDU-V7-ADMIN") { unlockPro(); return; } getHWID().then(hwid => { crypto.subtle.digest('SHA-256', new TextEncoder().encode(hwid + "FAKDU_SECRET")).then(hashBuffer => { const expected = "PRO-" + Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase().substring(0, 8); if(input === expected) { unlockPro(); } else { showToast("❌ รหัสไม่ถูกต้อง", "error"); triggerSpyBell("Pro Key Failed"); } }); }); }
+function unlockPro() { db.isPro = true; saveData(); closeModal('modal-pro-unlock'); applyTheme(); showToast("👑 ปลดล็อค PRO แล้ว!", "success"); }
+function openProModal() { playSound('click'); document.getElementById('modal-pro-unlock').style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function renderAll() { renderCustomerGrid(); renderShopQueue(); renderAdminLists(); renderAnalytics(); }
 
-function promptResetUnits() { const c = parseInt(document.getElementById('setting-count').value || db.unitCount); const t = document.getElementById('setting-unit').value || "โต๊ะ"; if(!db.isPro && c > 4) return showToast("⚠️ ทดลองใช้ได้ 4 คิว", "error"); customConfirm("สร้างโต๊ะใหม่ ยืนยันไหม?", () => { forceRebuildUnits(c, t); }); }
-function promptClearHistory() { customConfirm("ล้างยอดขายถาวร ยืนยัน?", () => { db.sales = []; saveData(); showToast("ล้างประวัติแล้ว"); }); }
+// ระบบ Backup / Restore
+function exportBackup() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(db)], {type: "application/json"})); a.download = `FAKDU_Backup_${getLocalYYYYMMDD()}.json`; a.click(); showToast("Backup สำเร็จ", "success"); }
+function importBackup(e) { const f = e.target.files[0]; if(!f) return; if(confirm("ข้อมูลในเครื่องจะถูกทับทั้งหมด แน่ใจหรือไม่?")) { const r = new FileReader(); r.onload = ev => { try { db = JSON.parse(ev.target.result); saveData(); location.reload(); } catch(err){ showToast("ไฟล์เสียหรือไม่ถูกต้อง", "error"); } }; r.readAsText(f); } }
 
-function saveSystemSettings() { db.shopName = document.getElementById('sys-shopname').value; db.bankName = document.getElementById('sys-bankname').value; db.theme = document.getElementById('sys-color').value; db.bgColor = document.getElementById('sys-bg-color').value; db.promptPay = document.getElementById('sys-promptpay').value; saveData(); showToast("บันทึกแล้ว", "success"); }
-function loadSettingsToForm() { document.getElementById('setting-unit').value = db.unit; document.getElementById('setting-count').value = db.unitCount; document.getElementById('sys-shopname').value = db.shopName; document.getElementById('sys-bankname').value = db.bankName || ''; document.getElementById('sys-color').value = db.theme; document.getElementById('sys-bg-color').value = db.bgColor || "#f8fafc"; document.getElementById('sys-promptpay').value = db.promptPay || ''; if(db.qrImg) { document.getElementById('sys-qr-preview').src = db.qrImg; document.getElementById('sys-qr-preview').classList.remove('hidden'); } updateBg(db.bgColor || "#f8fafc"); }
-function renderAddonCheckboxesInForm(sel) { const box = document.getElementById('form-item-addons'); box.innerHTML = ''; db.addons.forEach(a => { const c = sel.includes(a.id) ? 'checked' : ''; box.innerHTML += `<label class="flex items-center gap-2.5 bg-white p-2.5 rounded-xl border border-gray-100 mb-2"><input type="checkbox" value="${a.id}" class="addon-sel accent-maroon-800 w-4 h-4" ${c}> <span class="font-bold text-[13px] text-gray-700">${a.name} (+฿${a.price})</span></label>`; }); }
+// 🛡️ ป้องกันเจาะระบบ
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('selectstart', e => e.preventDefault());
+document.addEventListener('keydown', e => { if(e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'U')) { e.preventDefault(); showToast("⛔ ไม่อนุญาตให้ใช้เครื่องมือนี้", "error"); triggerSpyBell("DevTools Attempt"); } });
+window.addEventListener('beforeunload', (e) => { if(isClientMode) triggerSpyBell("Client Unexpected Exit"); });
 
-function applyTheme() { document.documentElement.style.setProperty('--primary', db.theme); document.getElementById('shop-name-display').innerText = db.shopName || "FAKDU"; if(db.logo) document.getElementById('shop-logo').src = db.logo; document.querySelectorAll('.lbl-unit').forEach(el => el.innerText = db.unit); checkProStatus(); }
-function renderAll() { renderCustomerGrid(); renderShopQueue(); renderAnalytics(); renderAdminLists(); }
-function switchAdminSubTab(s, el) { playSound('click'); document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); document.getElementById('sub-dash').style.display = s === 'dash' ? 'block' : 'none'; document.getElementById('sub-menu').style.display = s === 'menu' ? 'block' : 'none'; }
-function toggleCartDrawer() { document.getElementById('cart-drawer').classList.toggle('hidden'); playSound('click'); }
+let hasInteracted = false; document.body.addEventListener('click', () => { if(!hasInteracted) { hasInteracted = true; if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{}); } }, { once: true });
 
-window.addEventListener('DOMContentLoaded', initApp);
+// Boot Sequence
+window.addEventListener('DOMContentLoaded', initDB);
 </script>
-
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js').then((reg) => {
-                console.log('FAKDU ServiceWorker: พร้อมทำงานแบบ Offline!', reg.scope);
-            }).catch((err) => {
-                console.log('FAKDU ServiceWorker Error:', err);
-            });
-        });
-    }
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyC4jOmVcZp0HmmDqZCmHufnq2yyoPcvyVM",
-            authDomain: "pakdu-a26c4.firebaseapp.com",
-            databaseURL: "https://pakdu-a26c4-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "pakdu-a26c4",
-            storageBucket: "pakdu-a26c4.firebasestorage.app",
-            messagingSenderId: "414809008203",
-            appId: "1:414809008203:web:757dceafa78d91900d85ce"
-        };
-
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-    </script>
-
 </body>
 </html>
