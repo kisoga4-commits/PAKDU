@@ -84,10 +84,23 @@ async function saveRecoveryData() {
     
     if (!color || !animal) return showToast("❌ กรุณาเลือกข้อมูลให้ครบ", "error");
 
-    db.recColor = await sha256(color);
+    db.recColor = await sha256(color); // Hash เก็บไว้
     db.recAnimal = await sha256(animal);
-    saveData(); // บันทึกลง IndexedDB
+    saveData();
     showToast("💾 บันทึกคำถามลับเรียบร้อย", "success");
+}
+
+// ตรวจสอบคำถามลับ (เพื่อกู้รหัส)
+async function executeRecovery() {
+    const inputColor = await sha256(document.getElementById('rec-ans-color').value);
+    const inputAnimal = await sha256(document.getElementById('rec-ans-animal').value);
+
+    if (inputColor === db.recColor && inputAnimal === db.recAnimal) {
+        alert("🔑 รหัส Admin ของคุณคือ: " + (db.adminPin || "1234"));
+        closeModal('modal-recovery');
+    } else {
+        showToast("❌ คำตอบไม่ถูกต้อง", "error");
+    }
 }
 
 // 3. ปลดล็อค Pro (เช็คจาก Machine ID เท่านั้น ไม่มี GODMODE)
