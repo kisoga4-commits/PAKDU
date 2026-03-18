@@ -2,41 +2,120 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FAKDU v8.0 FIXED</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#800000">
+    <title>FAKDU v9.21 - Cloud Sync PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --primary: #800000; --bg: #f8fafc; }
-        body { font-family: 'Prompt', sans-serif; background: var(--bg); margin: 0; }
-        .app-container { width: 100%; max-width: 480px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 50px rgba(0,0,0,0.1); }
-        .header { background: var(--primary); color: white; padding: 20px; text-align: center; font-weight: 900; position: sticky; top: 0; z-index: 100; }
-        .item-btn { border: 1px solid #e2e8f0; border-radius: 15px; padding: 10px; display: flex; align-items: center; gap: 10px; margin: 10px; cursor: pointer; }
-        .item-img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; background: #eee; }
+        body { font-family: 'Prompt', sans-serif; background-color: var(--bg); display: flex; justify-content: center; height: 100dvh; margin: 0; user-select: none; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+        .app-container { width: 100%; max-width: 480px; background-color: var(--bg); height: 100dvh; position: relative; display: flex; flex-direction: column; overflow-x: hidden; box-shadow: 0 0 60px rgba(0,0,0,0.4); }
+        .screen { flex: 1; overflow-y: auto; padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
+        .glass-header { background: var(--primary); color: white; position: sticky; top: 0; z-index: 50; padding-top: env(safe-area-inset-top); height: calc(100px + env(safe-area-inset-top)); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .top-nav { display: flex; background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: calc(100px + env(safe-area-inset-top)); z-index: 40; }
+        .nav-tab { flex: 1; text-align: center; padding: 15px 0; font-size: 14px; font-weight: 900; color: #94a3b8; cursor: pointer; transition: 0.2s; border-bottom: 4px solid transparent; }
+        .nav-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: #fff5f5; }
+        .unit-card { aspect-ratio: 1; border-radius: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border: 2.5px solid #e2e8f0; background: white; transition: 0.2s; position: relative; }
+        .unit-busy { background: linear-gradient(135deg, #fffcf0, #fff); border-color: #f59e0b; color: #92400e; box-shadow: 0 8px 20px rgba(245,158,11,0.25); }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .modal-content { background: white; padding: 24px; border-radius: 32px; width: 92%; max-width: 400px; animation: popIn 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.27); max-height: 90vh; overflow-y: auto; }
+        .item-btn { background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 12px; display: flex; align-items: center; gap: 14px; cursor: pointer; position: relative; }
+        .item-img { width: 65px; height: 65px; border-radius: 14px; object-fit: cover; border: 1px solid #f1f5f9; background: #eee; }
+        #toast { visibility: hidden; min-width: 250px; background: #1e293b; color: #fff; text-align: center; border-radius: 16px; padding: 14px; position: fixed; z-index: 10000; left: 50%; bottom: 40px; transform: translateX(-50%); font-weight: 800; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
+        #toast.show { visibility: visible; animation: fadein 0.4s; }
+        @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 40px; opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="header" id="shop-name">FAKDU LOADING...</div>
-    <div id="item-grid" class="p-4">
+    <div class="glass-header">
+        <div class="flex items-center gap-3">
+            <div class="relative w-[50px] h-[50px]">
+                <div id="status-dot" class="absolute -top-1 -left-1 w-4 h-4 rounded-full border-2 border-white bg-gray-400"></div>
+                <img id="shop-logo" src="https://via.placeholder.com/50" class="w-full h-full rounded-xl object-cover bg-white">
+            </div>
+            <div>
+                <h1 id="display-shop-name" class="font-black text-white text-lg leading-tight truncate w-32">FAKDU</h1>
+                <p id="display-role" class="text-[10px] text-white/70 font-bold">MASTER MODE</p>
+            </div>
         </div>
+        <div class="flex items-center gap-2">
+            <div id="trial-badge" class="bg-yellow-400 text-black px-3 py-1 rounded-full text-[10px] font-black animate-pulse">รุ่นทดลอง</div>
+            <button onclick="openClientLogin()" class="bg-white/20 p-2 rounded-full text-xl">📱</button>
+        </div>
+    </div>
+
+    <div class="top-nav">
+        <div class="nav-tab active" onclick="switchTab('customer', this)">👨‍👩‍👦 ลูกค้า</div>
+        <div class="nav-tab" onclick="switchTab('shop', this)">🧾 เช็คบิล</div>
+        <div id="nav-manage" class="nav-tab" onclick="switchTab('manage', this)">📊 หลังร้าน</div>
+        <div id="nav-system" class="nav-tab" onclick="switchTab('system', this)">⚙️ ระบบ</div>
+    </div>
+
+    <div id="screen-customer" class="screen active p-4">
+        <div id="grid-units" class="grid grid-cols-2 gap-4"></div>
+    </div>
+
+    <div id="screen-order" class="screen hidden p-4 bg-gray-50">
+        <button onclick="switchTab('customer')" class="mb-4 text-sm font-black text-gray-500">← ย้อนกลับ</button>
+        <h2 class="text-2xl font-black mb-4">โต๊ะ <span id="active-unit-id">0</span></h2>
+        <div id="item-list" class="space-y-3"></div>
+        <div class="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-white p-4 shadow-2xl flex justify-between items-center rounded-t-3xl">
+            <div>
+                <p class="text-[10px] font-bold text-gray-400">ยอดรวม</p>
+                <p class="text-2xl font-black theme-text">฿<span id="cart-total">0</span></p>
+            </div>
+            <button onclick="sendOrder()" class="theme-bg px-8 py-3 rounded-2xl font-black shadow-lg">ส่งออร์เดอร์ 🚀</button>
+        </div>
+    </div>
+
+    <div id="screen-shop" class="screen hidden p-4">
+        <div id="shop-queue" class="space-y-4"></div>
+    </div>
+
+    <div id="screen-system" class="screen hidden p-6">
+        <h2 class="text-2xl font-black mb-6">ตั้งค่าระบบ</h2>
+        <div class="bg-blue-50 p-6 rounded-3xl border border-blue-100 mb-6">
+            <p class="text-xs font-bold text-blue-600 mb-2 uppercase">รหัสเชื่อมต่อเครื่องลูก (Sync PIN)</p>
+            <h3 id="display-sync-pin" class="text-4xl font-black tracking-widest text-blue-900 mb-4">------</h3>
+            <button onclick="copySyncPin()" class="w-full bg-white border border-blue-200 py-3 rounded-xl font-black text-xs">ก๊อปปี้รหัส</button>
+        </div>
+        <input id="sys-shop-name" type="text" placeholder="ชื่อร้าน" class="w-full p-4 rounded-2xl border-2 mb-4 font-bold">
+        <button onclick="saveSettings()" class="w-full theme-bg py-4 rounded-2xl font-black shadow-lg">บันทึกข้อมูล</button>
+    </div>
 </div>
+
+<div id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-// ### 2. ตั้งค่าข้อมูล (ใช้ var ทั้งหมดกัน Error ซ้ำ) ###
+// ==================== 1. GLOBAL VARIABLES ====================
 var db = {
-    shopName: "ร้านของป๋า (FAKDU)",
-    theme: "#800000",
+    shopName: "FAKDU SHOP",
+    syncKey: Math.random().toString(36).substring(2, 8).toUpperCase(),
     items: [
-        { id: 1, name: "ข้าวกะเพราหมูสับ", price: 50, img: "https://img.freepik.com/free-photo/stir-fried-pork-basil-with-fried-egg-rice_1150-35322.jpg" },
-        { id: 2, name: "ผัดไทยกุ้งสด", price: 70, img: "https://img.freepik.com/free-photo/pad-thai-white-plate_1150-11054.jpg" }
-    ]
+        {id: 1, name: "ข้าวกะเพรา", price: 50, img: "https://img.freepik.com/free-photo/stir-fried-pork-basil-with-fried-egg-rice_1150-35322.jpg"},
+        {id: 2, name: "ผัดไทย", price: 60, img: "https://img.freepik.com/free-photo/pad-thai-white-plate_1150-11054.jpg"}
+    ],
+    units: [],
+    sales: [],
+    isPro: false,
+    theme: "#800000"
 };
 
+var cart = [];
+var activeUnitId = null;
+var isClientMode = false;
+var clientName = "เครื่องแม่";
+
+// ==================== 2. FIREBASE INITIALIZE ====================
 var firebaseConfig = {
     apiKey: "AIzaSyC4jOmVcZp0HmmDqZCmHufnq2yyoPcvyVM",
     authDomain: "pakdu-a26c4.firebaseapp.com",
@@ -47,50 +126,174 @@ var firebaseConfig = {
     appId: "1:414809008203:web:757dceafa78d91900d85ce"
 };
 
-// ### 3. รันระบบ (เช็คขั้นบันได) ###
-function initApp() {
-    try {
-        // เชื่อมต่อ Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-            console.log("✅ 1. Cloud Connected");
+try {
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+        console.log("✅ Cloud Ready!");
+    }
+} catch (e) { console.error("Firebase Connect Error"); }
+
+// ==================== 3. SYNC LOGIC (เต็มระบบ) ====================
+function syncToCloud() {
+    if (!navigator.onLine) return;
+    firebase.database().ref('shops/' + db.syncKey).set(db);
+}
+
+function listenToCloud() {
+    firebase.database().ref('shops/' + db.syncKey).on('value', (snap) => {
+        const cloudData = snap.val();
+        if (cloudData) {
+            db = cloudData;
+            renderAll();
+            applyTheme();
+            console.log("☁️ ข้อมูลซิงค์จาก Cloud แล้ว");
         }
-        
-        // อัปเดตหน้าจอ
-        document.getElementById('shop-name').innerText = db.shopName;
-        renderItems();
-        console.log("✅ 2. UI Rendered");
-    } catch (err) {
-        console.error("❌ พังตรงนี้ป๋า:", err);
-        alert("มีปัญหา: " + err.message);
+    });
+}
+
+// ==================== 4. CORE FUNCTIONS ====================
+function renderAll() {
+    renderCustomerGrid();
+    renderShopQueue();
+    document.getElementById('display-shop-name').innerText = db.shopName;
+    document.getElementById('display-sync-pin').innerText = db.syncKey;
+}
+
+function renderCustomerGrid() {
+    const grid = document.getElementById('grid-units');
+    grid.innerHTML = '';
+    for (let i = 1; i <= 10; i++) {
+        const u = db.units.find(x => x.id === i) || {id: i, status: 'empty', orders: []};
+        const cls = u.orders.length > 0 ? 'unit-busy' : 'unit-empty border-gray-200';
+        grid.innerHTML += `<div class="unit-card ${cls}" onclick="openOrder(${i})">
+            <span class="text-3xl font-black">${i}</span>
+        </div>`;
     }
 }
 
-// ### 4. วาดรายการอาหาร (ใช้ Backtick ` ครอบ) ###
-function renderItems() {
-    const grid = document.getElementById('item-grid');
-    grid.innerHTML = '';
-    
-    db.items.forEach(i => {
-        // ใช้เครื่องหมาย ` (ปุ่มใต้ Esc) เท่านั้นนะครับป๋า
-        grid.innerHTML += `
-            <div class="item-btn" onclick="alert('สั่ง ${i.name}')">
-                <img src="${i.img}" class="item-img" onerror="this.src='https://via.placeholder.com/60?text=Food'">
+// แก้จุดพังเรื่องรูปภาพ (ใช้ Backtick ` ครอบ)
+function renderItemList() {
+    const box = document.getElementById('item-list');
+    box.innerHTML = '';
+    db.items.forEach(item => {
+        // ใช้ Backtick ` เพื่อให้ ${item.img} ทำงาน ไม่ขึ้น 404
+        box.innerHTML += `
+            <div class="item-btn shadow-sm" onclick="addToCart(${item.id})">
+                <img src="${item.img}" class="item-img" onerror="this.src='https://via.placeholder.com/65?text=Food'">
                 <div class="flex-1">
-                    <div class="font-bold text-gray-800">${i.name}</div>
-                    <div class="text-red-800 font-bold">฿${i.price}</div>
+                    <p class="font-black text-gray-800">${item.name}</p>
+                    <p class="theme-text font-black text-sm">฿${item.price}</p>
                 </div>
-                <div class="text-2xl text-gray-300">+</div>
+                <div class="text-2xl text-gray-300 font-black">+</div>
             </div>`;
     });
 }
 
-// ป้องกันกดปุ่ม F12
-function ds(e) { if(e.keyCode==123||(e.ctrlKey&&e.shiftKey&&(e.keyCode==73||e.keyCode==74))||(e.ctrlKey&&e.keyCode==85)) return false; }
-window.onkeydown = ds;
+function openOrder(id) {
+    activeUnitId = id;
+    cart = [];
+    document.getElementById('active-unit-id').innerText = id;
+    renderItemList();
+    updateCartUI();
+    switchTab('order');
+}
 
-// เริ่มรัน
-window.onload = initApp;
+function addToCart(id) {
+    const item = db.items.find(x => x.id === id);
+    cart.push({...item});
+    updateCartUI();
+    showToast(`เพิ่ม ${item.name} แล้ว`);
+}
+
+function updateCartUI() {
+    const total = cart.reduce((s, i) => s + i.price, 0);
+    document.getElementById('cart-total').innerText = total.toLocaleString();
+}
+
+function sendOrder() {
+    if (cart.length === 0) return showToast("ยังไม่ได้เลือกเมนู", "error");
+    let u = db.units.find(x => x.id === activeUnitId);
+    if (!u) { u = {id: activeUnitId, orders: []}; db.units.push(u); }
+    u.orders.push(...cart);
+    syncToCloud();
+    switchTab('customer');
+    showToast("ส่งออร์เดอร์สำเร็จ! 🚀", "success");
+}
+
+function renderShopQueue() {
+    const box = document.getElementById('shop-queue');
+    box.innerHTML = '';
+    const busyUnits = db.units.filter(u => u.orders.length > 0);
+    if (busyUnits.length === 0) {
+        box.innerHTML = '<p class="text-center py-20 text-gray-300 font-bold">ยังไม่มีโต๊ะค้างชำระ</p>';
+        return;
+    }
+    busyUnits.forEach(u => {
+        const total = u.orders.reduce((s, o) => s + o.price, 0);
+        box.innerHTML += `<div class="bg-white p-4 rounded-2xl border-2 border-orange-200 flex justify-between items-center shadow-md">
+            <div>
+                <p class="font-black text-xl">โต๊ะ ${u.id}</p>
+                <p class="text-sm font-bold text-gray-400">${u.orders.length} รายการ</p>
+            </div>
+            <div class="text-right">
+                <p class="text-2xl font-black theme-text">฿${total.toLocaleString()}</p>
+                <button onclick="checkout(${u.id})" class="bg-emerald-500 text-white px-4 py-1 rounded-lg text-xs font-black">เช็คบิล ✅</button>
+            </div>
+        </div>`;
+    });
+}
+
+function checkout(id) {
+    const u = db.units.find(x => x.id === id);
+    u.orders = [];
+    syncToCloud();
+    showToast("เช็คบิลเรียบร้อย!");
+    renderShopQueue();
+}
+
+// ==================== 5. UI HELPERS ====================
+function switchTab(id, el) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    document.getElementById(`screen-${id}`).classList.remove('hidden');
+    if (el) {
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+    }
+    if (id === 'customer') renderCustomerGrid();
+    if (id === 'shop') renderShopQueue();
+}
+
+function showToast(m, type='success') {
+    const t = document.getElementById('toast');
+    t.innerText = m;
+    t.classList.add('show');
+    t.style.backgroundColor = type === 'error' ? '#ef4444' : '#1e293b';
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function applyTheme() {
+    document.documentElement.style.setProperty('--primary', db.theme);
+}
+
+function saveSettings() {
+    db.shopName = document.getElementById('sys-shop-name').value;
+    syncToCloud();
+    showToast("บันทึกเรียบร้อย");
+}
+
+function copySyncPin() {
+    navigator.clipboard.writeText(db.syncKey);
+    showToast("ก๊อปปี้ PIN แล้ว");
+}
+
+// Start
+window.onload = () => {
+    renderAll();
+    listenToCloud();
+    applyTheme();
+};
+
+function ds(e) { if(e.keyCode==123||(e.ctrlKey&&e.shiftKey&&(e.keyCode==73||e.keyCode==74))||(e.ctrlKey&&e.keyCode==85)) return false; }
 </script>
 
 </body>
