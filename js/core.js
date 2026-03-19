@@ -321,6 +321,39 @@ function renderAdminLists() {
     db.items.forEach(i => { box.innerHTML += `<div class="flex justify-between items-center py-3 border-b border-gray-50"><div><div class="font-black text-gray-800 text-sm">${i.name}</div><div class="text-xs theme-text font-black">฿${i.price}</div></div><div class="flex gap-2"><button onclick="deleteItem(${i.id})" class="text-[10px] text-red-600 font-bold bg-red-50 px-3 py-2 rounded-xl">ลบ</button></div></div>`; }); 
 }
 let tempAddons = [];
+
+// --- ฟังก์ชันเปิดกล้องสแกน (สำหรับปุ่มในหน้า Index) ---
+function openClientScanner() {
+    // 1. สั่งเปิด Modal ที่มีกล้อง (ID ต้องตรงกับใน HTML)
+    const modal = document.getElementById('modal-client-scanner');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    } else {
+        alert("หา Modal กล้องไม่เจอพี่! เช็ค ID ใน HTML ด้วย");
+        return;
+    }
+
+    // 2. เริ่มทำงานกล้อง
+    const scanner = new Html5Qrcode("qr-reader-index");
+    scanner.start(
+        { facingMode: "environment" }, 
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+            // เมื่อสแกนติด ให้เอาเลขไปใส่ช่อง PIN
+            document.getElementById('manual-pin').value = decodedText;
+            scanner.stop(); // ปิดกล้อง
+            showToast("🔒 สแกนติดแล้ว!");
+        }
+    ).catch(err => console.error("กล้องพัง:", err));
+}
+
+// ฟังก์ชันปิดกล้อง
+function closeClientScanner() {
+    const modal = document.getElementById('modal-client-scanner');
+    if (modal) modal.classList.add('hidden');
+    // หยุดกล้องถ้ามันทำงานอยู่
+}
 function openMenuModal() { 
     if(!IS_PRO && db.items.length >= 4) { handleLockedFeatureClick(true); return; } 
     document.getElementById('form-menu-name').value = ""; document.getElementById('form-menu-price').value = ""; tempImg = null; document.getElementById('form-menu-preview').classList.add('hidden'); tempAddons = []; renderAddonFields(); document.getElementById('modal-menu-form').style.display = 'flex'; 
