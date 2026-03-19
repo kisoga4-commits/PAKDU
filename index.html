@@ -168,16 +168,21 @@
         </div>
 
         <div class="bg-blue-50 border border-blue-100 p-6 rounded-[28px] mb-6 shadow-sm">
-            <h3 class="font-black text-blue-800 text-sm mb-3">☁️ เชื่อมต่อเครื่องลูก (Client)</h3>
-            <div class="flex gap-3 items-center bg-white p-3 rounded-2xl border border-blue-200 shadow-inner mb-4">
-                <div id="sync-qr-area" class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center">QR</div>
-                <div class="flex-1 text-center">
-                    <p class="text-[9px] text-blue-500 font-bold uppercase mb-1">ให้เครื่องลูกสแกน QR นี้</p>
-                    <div id="display-sync-key" class="text-3xl font-mono text-blue-900 font-black tracking-[8px]">PIN</div>
-                <div class="mt-4 pt-4 border-t border-blue-100">
-    <a href="client.html" target="_blank" class="block w-full mt-3 bg-blue-100 text-blue-700 py-3 rounded-xl font-black text-xs text-center active:scale-95 border border-blue-200 shadow-sm">
-    📱 เปิดหน้าจอเครื่องลูก (Client)
-</a>
+    <h3 class="font-black text-blue-800 text-sm mb-3">☁️ เชื่อมต่อเครื่องลูก (Client)</h3>
+    
+    <div class="flex gap-3 items-center bg-white p-3 rounded-2xl border border-blue-200 shadow-inner mb-4">
+        <div id="sync-qr-area" class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center">QR</div>
+        <div class="flex-1 text-center">
+            <p class="text-[9px] text-blue-500 font-bold uppercase mb-1">ให้เครื่องลูกสแกน QR นี้</p>
+            <div id="display-sync-key" class="text-3xl font-mono text-blue-900 font-black tracking-[8px]">PIN</div>
+        </div>
+    </div> <button onclick="requestNewSyncKey()" class="w-full bg-white text-blue-600 border border-blue-200 py-3 rounded-xl font-black text-xs active:scale-95 mb-2">
+        🔄 ขอรหัสใหม่ (เตะเครื่องลูกเก่า)
+    </button>
+
+    <a href="client.html" target="_blank" class="block w-full bg-blue-600 text-white py-3 rounded-xl font-black text-xs text-center active:scale-95 shadow-md">
+        📱 เปิดหน้าจอเครื่องลูก (Client)
+    </a>
 </div>
 
         <div class="bg-white p-6 rounded-[28px] border shadow-sm mb-6">
