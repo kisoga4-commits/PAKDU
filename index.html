@@ -167,7 +167,7 @@
             <button onclick="saveRecoveryData()" class="w-full bg-red-600 text-white py-3 rounded-xl font-black text-xs active:scale-95 shadow-md">💾 บันทึกข้อมูลกู้คืน</button>
         </div>
 
-        <div class="bg-blue-50 border border-blue-100 p-6 rounded-[28px] mb-6 shadow-sm">
+       <div class="bg-blue-50 border border-blue-100 p-6 rounded-[28px] mb-6 shadow-sm">
     <h3 class="font-black text-blue-800 text-sm mb-3">☁️ เชื่อมต่อเครื่องลูก (Client)</h3>
     
     <div class="flex gap-3 items-center bg-white p-3 rounded-2xl border border-blue-200 shadow-inner mb-4">
@@ -176,7 +176,9 @@
             <p class="text-[9px] text-blue-500 font-bold uppercase mb-1">ให้เครื่องลูกสแกน QR นี้</p>
             <div id="display-sync-key" class="text-3xl font-mono text-blue-900 font-black tracking-[8px]">PIN</div>
         </div>
-    </div> <button onclick="requestNewSyncKey()" class="w-full bg-white text-blue-600 border border-blue-200 py-3 rounded-xl font-black text-xs active:scale-95 mb-2">
+    </div>
+
+    <button onclick="requestNewSyncKey()" class="w-full bg-white text-blue-600 border border-blue-200 py-3 rounded-xl font-black text-xs active:scale-95 mb-2">
         🔄 ขอรหัสใหม่ (เตะเครื่องลูกเก่า)
     </button>
 
