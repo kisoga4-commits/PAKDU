@@ -45,6 +45,27 @@ function saveData() {
     saveToIDB().then(() => { renderAll(); applyTheme(); updateSyncStatusDots(); syncToCloud(); }); 
 }
 
+// --- ระบบดักชื่อร้านและข้อมูลพื้นฐาน ---
+function loadShopSettings() {
+    // 1. ดึงชื่อร้านจาก LocalStorage (ในเครื่อง)
+    const storedName = localStorage.getItem('shop_name');
+    const displayElement = document.getElementById('display-shop-name');
+
+    if (displayElement) {
+        if (storedName) {
+            // ✅ ถ้าเคยเซฟชื่อไว้แล้ว ให้เอาชื่อนั้นมาโชว์
+            displayElement.innerText = storedName;
+        } else {
+            // ❌ ถ้ายังไม่เคยเซฟ (ลงแอปครั้งแรก) ให้ใช้ชื่อจาก Cloud หรือชื่อเริ่มต้น
+            // (ตรงนี้ถ้าพี่มี Cloud มันต้องไปดึงมาจาก Cloud ต่อ)
+            displayElement.innerText = "ร้านค้าใหม่"; 
+        }
+    }
+}
+
+// เรียกใช้งานทันทีที่โหลดหน้าเว็บ
+document.addEventListener('DOMContentLoaded', loadShopSettings);
+
 function syncToCloud() {
     if(!navigator.onLine || !IS_PRO) return;
     console.log("Cloud Backup Triggered (Stub)");
