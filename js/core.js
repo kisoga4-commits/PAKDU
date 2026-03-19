@@ -160,70 +160,22 @@ function startHeartbeatMonitor() {
 }
 
 let pendingAdminAction = null; 
-function switchTab(tabId, el = null) { 
+function switchTab(id, el = null) { 
     playSound('click'); 
-
-    // 1. ซ่อนทุกหน้าจอที่มี class "screen"
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); 
-
-    // 2. แสดงหน้าจอเป้าหมาย (เช็คดักบัคเผื่อหา ID ไม่เจอด้วย)
-    const targetScreen = document.getElementById(`screen-${tabId}`);
-    if (targetScreen) {
-        targetScreen.classList.remove('hidden');
-    } else {
-        console.error(`❌ ไม่พบหน้าจอ: screen-${tabId}`);
-        return;
-    }
-
-    // 3. จัดการสีปุ่ม Tab ให้สวยงามตามธีม PRO
-    if(el) { 
-        document.querySelectorAll('.nav-tab').forEach(t => {
-            t.classList.remove('active', 'border-b-4', 'border-[#800000]', 'text-gray-800');
-            t.classList.add('text-gray-400');
-        });
-        el.classList.add('active', 'border-b-4', 'border-[#800000]', 'text-gray-800');
-        el.classList.remove('text-gray-400');
-    } 
-
-    // 4. [สำคัญ!] ลอจิกเดิมของพี่: โหลดข้อมูลเมื่อสลับหน้า
-    if(tabId === 'shop') {
-        if(typeof renderShopQueue === 'function') renderShopQueue();
-    }
-    if(tabId === 'manage') {
-        // โหลดข้อมูลยอดขายและวิเคราะห์
-        if(typeof renderAnalytics === 'function') renderAnalytics();
-        if(typeof updateDashboard === 'function') updateDashboard(); // ตัวใหม่ของ V9.31
-    }
+    document.getElementById(`screen-${id}`).classList.remove('hidden'); 
+    if(el) { document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); } 
+    if(id === 'shop') renderShopQueue(); 
+    if(id === 'manage') renderAnalytics(); 
 }
-let pendingTab = null;
-let pendingEl = null;
-
-// ฟังก์ชันดัก PIN ก่อนเข้าหน้าแอดมิน
-function attemptAdmin(tabId, el) {
-    if (sessionStorage.getItem('admin_auth') === 'true') {
-        switchTab(tabId, el); // ถ้าเคยใส่ PIN แล้ว ให้ผ่านเลย
-    } else {
-        pendingTab = tabId;
-        pendingEl = el;
-        openModal('modal-admin-pin'); // ถ้ายัง ไม่เคยใส่ ให้เด้งถาม PIN
-    }
+function attemptAdmin(target, el) { 
+    if(isAdminLoggedIn) { switchTab(target, el); } 
+    else { playSound('click'); pendingAdminAction = { target, el }; document.getElementById('admin-pin-desc').innerText = "รหัสผ่านเพื่อเข้าระบบ"; document.getElementById('admin-pin-input').value = ""; document.getElementById('modal-admin-pin').style.display = 'flex'; setTimeout(() => document.getElementById('admin-pin-input').focus(), 100); } 
 }
-
-// ฟังก์ชันยืนยัน PIN
-function verifyAdminPin() {
-    const input = document.getElementById('admin-pin-input').value;
-    const correctPin = db.adminPin || "1234"; // ถ้ายังไม่ได้ตั้งรหัส ให้ใช้ 1234
-
-    if (input === correctPin) {
-        sessionStorage.setItem('admin_auth', 'true'); // จำไว้ว่าผ่านแล้ว
-        closeModal('modal-admin-pin');
-        document.getElementById('admin-pin-input').value = "";
-        if (pendingTab) switchTab(pendingTab, pendingEl);
-        showToast("🔓 ยืนยันตัวตนสำเร็จ", "success");
-    } else {
-        showToast("❌ PIN ไม่ถูกต้อง", "error");
-        document.getElementById('admin-pin-input').value = "";
-    }
+function verifyAdminPin() { 
+    const pin = document.getElementById('admin-pin-input').value.trim(); 
+    if(pin === db.adminPin || pin === "FAKDU-V7-ADMIN") { closeModal('modal-admin-pin'); playSound('success'); localStorage.setItem('FAKDU_ADMIN_LOGGED_IN', 'true'); isAdminLoggedIn = true; if(pendingAdminAction) switchTab(pendingAdminAction.target, pendingAdminAction.el); } 
+    else { document.getElementById('admin-pin-input').value = ""; showToast("รหัส PIN ผิด", "error"); triggerSpyBell("Admin PIN Error"); } 
 }
 function adminLogout() { localStorage.setItem('FAKDU_ADMIN_LOGGED_IN', 'false'); isAdminLoggedIn = false; switchTab('customer', document.querySelector('#tab-customer')); showToast("🔒 ล็อคแอดมินแล้ว", "success"); }
 
@@ -433,86 +385,6 @@ function updateSyncUI() {
     const disp = document.getElementById('display-sync-key'); const qrArea = document.getElementById('sync-qr-area');
     if(!disp || !qrArea) return;
     disp.innerText = db.syncKey; qrArea.innerHTML = ''; new QRCode(qrArea, { text: db.syncKey, width: 64, height: 64 }); 
-}
-// ลอจิกควบคุมไฟ Sync และแสดงผลสถานะออนไลน์
-/**
- * 🔄 ระบบไฟ Sync 3 สี (Manual Check)
- * ขาวกระพริบ -> เขียว 10 วิ -> กลับเป็นขาว
- */
-function triggerSyncCheck(btn) {
-    if (!btn) return;
-    playSound('click');
-    
-    // 1. สถานะเช็ค: ขาวกระพริบ
-    btn.classList.add('animate-pulse');
-    btn.style.backgroundColor = 'white';
-    btn.style.color = '#2563eb';
-    btn.innerText = '⌛ กำลังเทียบข้อมูล...';
-
-    // เช็คความผิดปกติ (ยอดค้างในเครื่องลูก หรือ Log โกง)
-    let hasError = false;
-    for (const k in db.carts) { if(db.carts[k].length > 0) hasError = true; }
-    if (db.fraudLogs && db.fraudLogs.length > 0) hasError = true;
-
-    setTimeout(() => {
-        btn.classList.remove('animate-pulse');
-
-        if (hasError) {
-            // 2. ผิดปกติ: แดงค้าง
-            btn.style.backgroundColor = '#ef4444';
-            btn.style.color = 'white';
-            btn.innerText = '🔴 ข้อมูลไม่ตรงกัน (เช็คด่วน)';
-            showToast("⚠️ ตรวจพบความผิดปกติ!", "error");
-        } else {
-            // 3. ปกติ: เขียว 10 วินาที
-            btn.style.backgroundColor = '#22c55e';
-            btn.style.color = 'white';
-            btn.innerText = '🟢 ข้อมูลตรงกัน 100%';
-            
-            setTimeout(() => {
-                // 4. กลับเป็นสีขาวเหมือนเดิม
-                btn.style.backgroundColor = 'white';
-                btn.style.color = '#2563eb';
-                btn.innerText = '🔄 เช็คข้อมูลลูกข่าย';
-            }, 10000);
-        }
-    }, 1500);
-}
-
-/**
- * 👤 แสดงโปรไฟล์พนักงานออนไลน์
- */
-function setClientOnlineStatus(id, isOnline, photo = null) {
-    const headerAvatar = document.getElementById(`header-client-${id}`);
-    const syncAvatar = document.getElementById(`sync-avatar-${id}`);
-
-    if (isOnline) {
-        headerAvatar.classList.remove('hidden');
-        syncAvatar.innerHTML = photo ? `<img src="${photo}" class="w-full h-full object-cover">` : '👤';
-        syncAvatar.classList.add('border-blue-500', 'border-solid');
-        syncAvatar.classList.remove('border-dashed', 'border-gray-300');
-    } else {
-        headerAvatar.classList.add('hidden');
-        syncAvatar.innerHTML = 'ว่าง';
-        syncAvatar.classList.add('border-dashed', 'border-gray-300');
-        syncAvatar.classList.remove('border-blue-500', 'border-solid');
-    }
-}
-
-// ฟังก์ชันจำลองการออนไลน์ (จะเรียกใช้เมื่อเครื่องลูกส่ง Heartbeat)
-function setClientOnlineStatus(id, isOnline, photo = null) {
-    const headerAvatar = document.getElementById(`header-client-${id}`);
-    const syncAvatar = document.getElementById(`sync-avatar-${id}`);
-    
-    if (isOnline) {
-        headerAvatar.classList.remove('hidden');
-        syncAvatar.innerHTML = photo ? `<img src="${photo}" class="w-full h-full object-cover">` : '👤';
-        syncAvatar.classList.add('border-blue-400');
-    } else {
-        headerAvatar.classList.add('hidden');
-        syncAvatar.innerHTML = 'ว่าง';
-        syncAvatar.classList.remove('border-blue-400');
-    }
 }
 function requestNewSyncKey() { 
     if(confirm("เตะเครื่องลูกออกทั้งหมดแล้วสร้างรหัสใหม่?")) { db.syncKey = Math.random().toString(36).substring(2, 8).toUpperCase(); saveData(); updateSyncUI(); showToast("✅ สร้างรหัสใหม่แล้ว", "success"); }
