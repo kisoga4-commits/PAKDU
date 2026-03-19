@@ -65,6 +65,26 @@ function loadShopSettings() {
 
 // เรียกใช้งานทันทีที่โหลดหน้าเว็บ
 document.addEventListener('DOMContentLoaded', loadShopSettings);
+async function initApp() {
+    console.log("🚀 กำลังกู้คืนข้อมูล...");
+    
+    // 1. ดึงข้อมูลโต๊ะจาก IndexedDB (หรือ LocalStorage)
+    const savedTables = await db.tables.toArray(); // สมมติใช้ Dexie หรือ IndexedDB
+    
+    if (savedTables && savedTables.length > 0) {
+        // ✅ ถ้ามีข้อมูลเดิม ให้เอามาใส่ตัวแปรหลัก
+        currentTables = savedTables; 
+        console.log("✅ โหลดโต๊ะกลับมาได้:", currentTables.length, "โต๊ะ");
+        
+        // 2. สั่งวาดโต๊ะลงหน้าจอทันที
+        renderTableLayout(); 
+    } else {
+        console.log("❓ ไม่เจอข้อมูลโต๊ะในเครื่อง... อาจจะต้องดึงจาก Cloud");
+        // ถ้าในเครื่องไม่มี ให้ไปดึงจาก Cloud ต่อ (ถ้ามีระบบ Sync)
+        pullTablesFromCloud(); 
+    }
+}
+
 
 function syncToCloud() {
     if(!navigator.onLine || !IS_PRO) return;
