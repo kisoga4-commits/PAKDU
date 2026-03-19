@@ -27,6 +27,15 @@ function openIndexedDB() {
         req.onerror = e => reject("DB Error");
     });
 }
+
+async function initPOS() {
+    // อย่าเพิ่งวาดหน้าจอด้วยค่าว่าง! 
+    // ให้ไปดูดของเก่าจาก IndexedDB มาใส่ RAM ก่อน
+    const savedData = await db.tables.toArray();
+    if(savedData.length > 0) {
+        renderUI(savedData); // เอาของเก่ามาโชว์ทันที
+    }
+}
 function saveToIDB() {
     return new Promise((resolve) => {
         const tx = idb.transaction('store', 'readwrite');
