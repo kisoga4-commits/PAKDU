@@ -49,6 +49,8 @@
         </div>
     </div>
 
+    
+
     <div class="top-nav">
         <div id="tab-customer" class="nav-tab active" onclick="switchTab('customer', this)">👨‍👩‍👦 ลูกค้า</div>
         <div id="tab-shop" class="nav-tab" onclick="switchTab('shop', this)">🧾 เช็คบิล</div>
@@ -173,9 +175,11 @@
                     <p class="text-[9px] text-blue-500 font-bold uppercase mb-1">ให้เครื่องลูกสแกน QR นี้</p>
                     <div id="display-sync-key" class="text-3xl font-mono text-blue-900 font-black tracking-[8px]">PIN</div>
                 </div>
-            </div>
-            <button onclick="requestNewSyncKey()" class="w-full bg-white text-blue-600 border border-blue-200 py-3 rounded-xl font-black text-xs active:scale-95">🔄 ขอรหัสใหม่ (เตะเครื่องลูกเก่า)</button>
-        </div>
+            <div class="mt-4 pt-4 border-t border-blue-200/50">
+    <a href="client.html" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black text-xs active:scale-95 shadow-md flex items-center justify-center gap-2">
+        📱 ใช้เครื่องนี้เป็นเครื่องลูก (สแกนเข้าโหมดพนักงาน)
+    </a>
+</div>
 
         <div class="bg-white p-6 rounded-[28px] border shadow-sm mb-6">
             <label class="text-[12px] text-gray-400 font-bold uppercase tracking-widest mb-4 block">ข้อมูลร้านค้า</label>
