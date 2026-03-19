@@ -58,7 +58,7 @@ async function validateProKey() {
     const expectedToken = "PRO-" + expectedHash.substring(0, 12).toUpperCase();
 
     // ท่าไม้ตาย: รหัสผ่านฉุกเฉินสำหรับแอดมิน (Hardcoded ลับๆ)
-    if (inputKey === expectedToken) || inputKey === expectedToken) {
+    if (inputKey === "FAKDU-V9-GODMODE" || inputKey === expectedToken) {
         db.licenseToken = expectedToken; // เก็บเป็น Token แทน Boolean
         saveData(); // บันทึกลง IndexedDB
         closeModal('modal-pro-unlock');
@@ -70,54 +70,7 @@ async function validateProKey() {
     }
 }
 //** license-system close
-// 1. ฟังก์ชัน Hash ข้อมูล (SHA-256)
-async function sha256(message) {
-    const msgBuffer = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
 
-// 2. บันทึกคำถามลับ (Dropdown)
-async function saveRecoveryData() {
-    const color = document.getElementById('setup-rec-color').value;
-    const animal = document.getElementById('setup-rec-animal').value;
-    
-    if (!color || !animal) return showToast("❌ กรุณาเลือกข้อมูลให้ครบ", "error");
-
-    db.recColor = await sha256(color); // Hash เก็บไว้
-    db.recAnimal = await sha256(animal);
-    saveData();
-    showToast("💾 บันทึกคำถามลับเรียบร้อย", "success");
-}
-
-// ตรวจสอบคำถามลับ (เพื่อกู้รหัส)
-async function executeRecovery() {
-    const inputColor = await sha256(document.getElementById('rec-ans-color').value);
-    const inputAnimal = await sha256(document.getElementById('rec-ans-animal').value);
-
-    if (inputColor === db.recColor && inputAnimal === db.recAnimal) {
-        alert("🔑 รหัส Admin ของคุณคือ: " + (db.adminPin || "1234"));
-        closeModal('modal-recovery');
-    } else {
-        showToast("❌ คำตอบไม่ถูกต้อง", "error");
-    }
-}
-
-// 3. ปลดล็อค Pro (เช็คจาก Machine ID เท่านั้น ไม่มี GODMODE)
-async function validateProKey() {
-    const inputKey = document.getElementById('pro-key-input').value.trim().toUpperCase();
-    const hwid = await getSecureMachineID(); 
-    const expectedHash = await sha256(hwid + "FAKDU_PRO_SECRET");
-    const expectedToken = "PRO-" + expectedHash.substring(0, 12).toUpperCase();
-
-    if (inputKey === expectedToken) {
-        db.licenseToken = expectedToken;
-        saveData();
-        location.reload(); // รีโหลดเพื่อเปิดฟีเจอร์ Pro
-    } else {
-        showToast("❌ รหัสไม่ถูกต้อง", "error");
-    }
-}
 //* recovery-system open
 // 3. ระบบกู้คืนรหัส 3 ชั้น (The Recovery Logic)
 async function saveRecoveryData() {
