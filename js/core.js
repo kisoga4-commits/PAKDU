@@ -72,6 +72,53 @@ function loadShopSettings() {
     }
 }
 
+async function hydrateApp() {
+    console.log("🔄 ระบบกำลังกู้คืนข้อมูล (Hydration)...");
+
+    // --- 1. หมวดตัวตนและ Security (ห้ามลืมเด็ดขาด!) ---
+    // กวาดชื่อร้าน
+    shopName = localStorage.getItem('shop_name') || "ร้านใหม่";
+    // กวาด License Token (ถ้าหาย แอปจะหลุดจาก PRO)
+    licenseToken = db.licenseToken || localStorage.getItem('FAKDU_LICENSE_TOKEN');
+    // กวาด Machine ID เพื่อยืนยันตัวตน
+    machineID = await getSecureMachineID();
+
+    // --- 2. หมวด UI & Theme ---
+    // กวาดสีธีม (ถ้าพี่ให้เปลี่ยนสีได้ ต้องโหลดกลับมาตรงนี้)
+    const savedTheme = localStorage.getItem('theme_color') || '#007bff';
+    document.documentElement.style.setProperty('--main-color', savedTheme);
+    
+    // กวาดรูปร้าน (Base64)
+    shopLogo = localStorage.getItem('shop_logo') || 'default-logo.png';
+
+    // --- 3. หมวดฐานข้อมูลร้าน (IndexedDB) ---
+    // กวาดผังโต๊ะ (ตำแหน่ง X, Y และสถานะ)
+    currentTables = await db.tables.toArray();
+    // กวาดหมวดหมู่และเมนูอาหาร (ถ้าไม่โหลด พนักงานจะกดสั่งไม่ได้)
+    menuCategories = await db.categories.toArray();
+    menuItems = await db.items.toArray();
+
+    // --- 4. หมวดการขายปัจจุบัน (Active Data) ---
+    // กวาดบิลที่ยังไม่ปิด (เพื่อเอา Timestamp และรายการอาหารกลับมา)
+    activeBills = await db.bills.toArray();
+    
+    // กวาด Queue ที่ยังไม่ได้ซิงค์ (เผื่อออฟไลน์อยู่ ข้อมูลจะได้ไม่หาย)
+    pendingSync = await db.syncQueue.toArray();
+
+    // --- 5. หมวดความปลอดภัย (Admin & Recovery) ---
+    // กวาด Admin PIN (Hashed) และคำถามกู้คืน
+    adminPinHash = await db.settings.get('admin_pin_hash');
+    recoveryData = await db.settings.get('recovery_questions');
+
+    // --- สั่ง Render ทุกอย่างลงหน้าจอ ---
+    console.log("✅ กู้คืนข้อมูลสำเร็จ! กำลังวาด UI...");
+    renderAllUI(); 
+    
+    // เช็คสิทธิ์ PRO ทันทีหลังโหลดเสร็จ
+    if (await isProActive()) {
+        applyProFeatures();
+    }
+}
 // เรียกใช้งานทันทีที่โหลดหน้าเว็บ
 document.addEventListener('DOMContentLoaded', loadShopSettings);
 async function initApp() {
