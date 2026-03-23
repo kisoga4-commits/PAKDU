@@ -51,8 +51,33 @@ function loadFromIDB() {
         req.onsuccess = () => resolve(req.result);
     });
 }
+let renderQueued = false;
+let syncDebounceTimer = null;
+
+function queueLightRender() {
+    if (renderQueued) return;
+    renderQueued = true;
+    requestAnimationFrame(() => {
+        renderQueued = false;
+        renderAll();
+        applyTheme();
+        updateSyncStatusDots();
+    });
+}
+
+function scheduleCloudSync() {
+    if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
+    syncDebounceTimer = setTimeout(() => {
+        syncDebounceTimer = null;
+        syncToCloud();
+    }, 1200);
+}
+
 function saveData() { 
-    saveToIDB().then(() => { renderAll(); applyTheme(); updateSyncStatusDots(); syncToCloud(); }); 
+    saveToIDB().then(() => {
+        queueLightRender();
+        scheduleCloudSync();
+    }); 
 }
 
 // --- ระบบดักชื่อร้านและข้อมูลพื้นฐาน ---
@@ -205,9 +230,20 @@ function getLocalYYYYMMDD(d = new Date()) {
     return new Intl.DateTimeFormat('en-CA', options).format(d); 
 }
 
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-function openProModal() { playSound('click'); document.getElementById('modal-pro-unlock').style.display = 'flex'; }
-function openRecoveryModal() { closeModal('modal-admin-pin'); document.getElementById('modal-recovery').style.display = 'flex'; }
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    if(!modal) return;
+    modal.style.display = 'none';
+    modal.classList.add('hidden');
+}
+function openModal(id) {
+    const modal = document.getElementById(id);
+    if(!modal) return;
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+}
+function openProModal() { playSound('click'); openModal('modal-pro-unlock'); }
+function openRecoveryModal() { closeModal('modal-admin-pin'); openModal('modal-recovery'); }
 
 function triggerSyncCheck(btnElement) {
     playSound('click');
@@ -268,13 +304,19 @@ function switchTab(id, el = null) {
 }
 function attemptAdmin(target, el) { 
     if(isAdminLoggedIn) { switchTab(target, el); } 
-    else { playSound('click'); pendingAdminAction = { target, el }; document.getElementById('admin-pin-desc').innerText = "รหัสผ่านเพื่อเข้าระบบ"; document.getElementById('admin-pin-input').value = ""; document.getElementById('modal-admin-pin').style.display = 'flex'; setTimeout(() => document.getElementById('admin-pin-input').focus(), 100); } 
+    else { playSound('click'); pendingAdminAction = { target, el }; document.getElementById('admin-pin-desc').innerText = "รหัสผ่านเพื่อเข้าระบบ"; document.getElementById('admin-pin-input').value = ""; openModal('modal-admin-pin'); setTimeout(() => document.getElementById('admin-pin-input').focus(), 100); } 
 }
 function verifyAdminPin() { 
     const pin = document.getElementById('admin-pin-input').value.trim(); 
     if(pin === db.adminPin || pin === "FAKDU-V7-ADMIN") { closeModal('modal-admin-pin'); playSound('success'); localStorage.setItem('FAKDU_ADMIN_LOGGED_IN', 'true'); isAdminLoggedIn = true; if(pendingAdminAction) switchTab(pendingAdminAction.target, pendingAdminAction.el); } 
     else { document.getElementById('admin-pin-input').value = ""; showToast("รหัส PIN ผิด", "error"); triggerSpyBell("Admin PIN Error"); } 
 }
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const modal = document.getElementById('modal-admin-pin');
+    if (!modal || modal.classList.contains('hidden')) return;
+    verifyAdminPin();
+});
 function adminLogout() { localStorage.setItem('FAKDU_ADMIN_LOGGED_IN', 'false'); isAdminLoggedIn = false; switchTab('customer', document.querySelector('#tab-customer')); showToast("🔒 ล็อคแอดมินแล้ว", "success"); }
 
 function changeGridZoom(dir) { playSound('click'); gridZoom += dir; if(gridZoom < 2) gridZoom = 2; if(gridZoom > 5) gridZoom = 5; updateGridZoomUI(); }
@@ -322,7 +364,7 @@ function handleItemClick(id) {
         pendingAddonItem = item; currentAddonQty = 1; document.getElementById('addon-qty-display').innerText = currentAddonQty; document.getElementById('addon-modal-name').innerText = item.name; document.getElementById('addon-modal-price').innerText = item.price; 
         const list = document.getElementById('addon-options-list'); list.innerHTML = ''; 
         item.addons.forEach((a, idx) => { list.innerHTML += `<label class="flex justify-between items-center bg-white border p-3 rounded-xl cursor-pointer active:scale-95 transition-transform"><div class="flex items-center gap-3"><input type="checkbox" class="addon-checkbox w-5 h-5 accent-primary" data-price="${a.price}" data-name="${a.name}"> <span class="font-bold text-sm text-gray-700">${a.name}</span></div><div class="font-black text-gray-500">+฿${a.price}</div></label>`; }); 
-        document.getElementById('modal-addon-select').style.display = 'flex'; 
+        openModal('modal-addon-select'); 
     } else { addToCartActual(item, [], 1); } 
 }
 function adjustAddonQty(val) { currentAddonQty += val; if(currentAddonQty < 1) currentAddonQty = 1; document.getElementById('addon-qty-display').innerText = currentAddonQty; playSound('click'); }
@@ -344,7 +386,7 @@ function reviewCart() {
     const cart = db.carts[activeUnitId] || []; if(cart.length === 0) return showToast("ตะกร้าว่าง", "error"); 
     document.getElementById('review-unit-id').innerText = activeUnitId; const box = document.getElementById('review-list'); box.innerHTML = ''; let t = 0; 
     cart.forEach((c, idx) => { t += c.total; box.innerHTML += `<div class="flex justify-between items-center py-3 border-b border-gray-50"><div class="flex-1 font-bold text-gray-800">${c.name} <span class="bg-gray-100 px-2 rounded ml-1 text-xs">x${c.qty}</span></div><div class="flex items-center gap-2"><span class="font-black">฿${c.total.toLocaleString()}</span><button onclick="editCartItem(${idx},-1)" class="w-8 h-8 rounded-lg bg-gray-100 font-bold">-</button><button onclick="editCartItem(${idx},1)" class="w-8 h-8 rounded-lg bg-gray-100 font-bold">+</button></div></div>`; }); 
-    document.getElementById('review-total-price').innerText = t.toLocaleString(); document.getElementById('modal-review').style.display = 'flex'; 
+    document.getElementById('review-total-price').innerText = t.toLocaleString(); openModal('modal-review'); 
 }
 function editCartItem(idx, d) { 
     let cart = db.carts[activeUnitId]; cart[idx].qty += d; cart[idx].total = cart[idx].qty * cart[idx].price; 
@@ -369,7 +411,7 @@ function renderShopQueue() {
 function openCheckout(id) {
     const u = db.units.find(x => x.id === id); activeUnitId = id; document.getElementById('checkout-unit-id').innerText = id; u.newItemsQty = 0; let t = 0; const box = document.getElementById('checkout-item-list'); box.innerHTML = '';
     u.orders.forEach((o, idx) => { t += o.total; let delBtn = `<button onclick="deleteOrderItem(${idx})" class="text-red-500 w-7 h-7 rounded-lg bg-red-50 font-bold ml-2">X</button>`; box.innerHTML += `<div class="flex justify-between items-center py-3 border-b border-gray-50"><div class="flex-1 font-bold text-gray-800">${o.name} <span class="bg-gray-100 px-2 rounded ml-1 text-[10px]">x${o.qty}</span><div class="text-[8px] text-gray-400 font-normal">📝 ${o.orderBy || 'Master'}</div></div><div class="flex items-center"><span>฿${o.total.toLocaleString()}</span>${delBtn}</div></div>`; });
-    document.getElementById('checkout-total').innerText = t.toLocaleString(); currentCheckoutTotal = t; updateQRDisplay(); document.getElementById('modal-checkout').style.display = 'flex';
+    document.getElementById('checkout-total').innerText = t.toLocaleString(); currentCheckoutTotal = t; updateQRDisplay(); openModal('modal-checkout');
 }
 function updateQRDisplay() { 
     const offImg = document.getElementById('qr-offline-img'); const genArea = document.getElementById('qr-gen-area'); const txt = document.getElementById('qr-status-text'); 
@@ -422,15 +464,50 @@ function renderAdminLists() {
 }
 let tempAddons = [];
 
+function createEmployeeAccessCode() {
+    const existing = new Set((db.employees || []).map(emp => emp.accessCode));
+    let code = '';
+    do {
+        code = `EMP-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    } while (existing.has(code));
+    return code;
+}
+
+function escapeHTML(value = '') {
+    return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
 function addEmployeeShift() {
+    const idInput = document.getElementById('emp-id');
     const nameInput = document.getElementById('emp-name');
     const shiftInput = document.getElementById('emp-shift');
-    if(!nameInput || !shiftInput) return;
+    if(!idInput || !nameInput || !shiftInput) return;
+
+    const employeeId = idInput.value.trim().toUpperCase();
     const name = nameInput.value.trim();
     const shift = shiftInput.value.trim();
-    if(!name || !shift) return showToast("กรอกชื่อและกะให้ครบ", "error");
+
+    if(!employeeId || !name || !shift) return showToast("กรอกรหัสพนักงาน ชื่อ และกะให้ครบ", "error");
     if(!db.employees) db.employees = [];
-    db.employees.push({ id: Date.now(), name, shift, createdAt: new Date().toISOString() });
+
+    const isDuplicateId = db.employees.some(emp => (emp.employeeId || '').toUpperCase() === employeeId);
+    if(isDuplicateId) return showToast("รหัสพนักงานนี้ถูกใช้แล้ว", "error");
+
+    db.employees.push({
+        id: Date.now(),
+        employeeId,
+        accessCode: createEmployeeAccessCode(),
+        name,
+        shift,
+        createdAt: new Date().toISOString()
+    });
+
+    idInput.value = "";
     nameInput.value = "";
     shiftInput.value = "";
     saveData();
@@ -449,7 +526,15 @@ function renderEmployeeList() {
         box.innerHTML = '<div class="text-xs text-gray-400 font-bold py-3 text-center">ยังไม่มีพนักงาน</div>';
         return;
     }
-    box.innerHTML = employees.map(emp => `<div class="flex justify-between items-center py-3 border-b border-gray-50"><div><div class="font-black text-gray-800 text-sm">${emp.name}</div><div class="text-[11px] text-blue-600 font-bold">กะ: ${emp.shift}</div></div><button onclick="removeEmployeeShift(${emp.id})" class="text-[10px] text-red-600 font-bold bg-red-50 px-3 py-2 rounded-xl">ลบ</button></div>`).join('');
+
+    box.innerHTML = employees.map(emp => {
+        const employeeId = escapeHTML(emp.employeeId || `EMP-${emp.id}`);
+        const accessCode = escapeHTML(emp.accessCode || 'ยังไม่กำหนด');
+        const name = escapeHTML(emp.name || '-');
+        const shift = escapeHTML(emp.shift || '-');
+
+        return `<div class="flex justify-between items-center py-3 border-b border-gray-50"><div><div class="font-black text-gray-800 text-sm">${name}</div><div class="text-[11px] text-gray-500 font-bold">ID: ${employeeId}</div><div class="text-[11px] text-blue-600 font-bold">กะ: ${shift}</div><div class="text-[10px] text-emerald-600 font-black">Code: ${accessCode}</div></div><button onclick="removeEmployeeShift(${emp.id})" class="text-[10px] text-red-600 font-bold bg-red-50 px-3 py-2 rounded-xl">ลบ</button></div>`;
+    }).join('');
 }
 function renderShiftTab() {
     const box = document.getElementById('employee-shift-report');
@@ -459,7 +544,14 @@ function renderShiftTab() {
         box.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">ยังไม่มีข้อมูลกะพนักงาน</p>';
         return;
     }
-    box.innerHTML = employees.map((emp, idx) => `<div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl border mb-2"><div><div class="font-black text-gray-800">${idx + 1}. ${emp.name}</div><div class="text-[11px] text-gray-500 font-bold">กะทำงาน: ${emp.shift}</div></div><div class="text-[10px] text-blue-600 font-black bg-white px-2 py-1 rounded-full border border-blue-100">พนักงาน</div></div>`).join('');
+
+    box.innerHTML = employees.map((emp, idx) => {
+        const employeeId = escapeHTML(emp.employeeId || `EMP-${emp.id}`);
+        const accessCode = escapeHTML(emp.accessCode || 'ยังไม่กำหนด');
+        const name = escapeHTML(emp.name || '-');
+        const shift = escapeHTML(emp.shift || '-');
+        return `<div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl border mb-2"><div><div class="font-black text-gray-800">${idx + 1}. ${name}</div><div class="text-[11px] text-gray-500 font-bold">ID: ${employeeId}</div><div class="text-[11px] text-gray-500 font-bold">กะทำงาน: ${shift}</div><div class="text-[10px] text-emerald-600 font-black">รหัสเฉพาะ: ${accessCode}</div></div><div class="text-[10px] text-blue-600 font-black bg-white px-2 py-1 rounded-full border border-blue-100">พนักงาน</div></div>`;
+    }).join('');
 }
 
 // --- ฟังก์ชันเปิดกล้องสแกน (สำหรับปุ่มในหน้า Index) ---
@@ -496,7 +588,7 @@ function closeClientScanner() {
 }
 function openMenuModal() { 
     if(!IS_PRO && db.items.length >= 4) { handleLockedFeatureClick(true); return; } 
-    document.getElementById('form-menu-name').value = ""; document.getElementById('form-menu-price').value = ""; tempImg = null; document.getElementById('form-menu-preview').classList.add('hidden'); tempAddons = []; renderAddonFields(); document.getElementById('modal-menu-form').style.display = 'flex'; 
+    document.getElementById('form-menu-name').value = ""; document.getElementById('form-menu-price').value = ""; tempImg = null; document.getElementById('form-menu-preview').classList.add('hidden'); tempAddons = []; renderAddonFields(); openModal('modal-menu-form'); 
 }
 function addAddonField() { tempAddons.push({name: '', price: 0}); renderAddonFields(); }
 function removeAddonField(idx) { tempAddons.splice(idx, 1); renderAddonFields(); }
