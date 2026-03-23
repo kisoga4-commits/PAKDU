@@ -159,10 +159,12 @@
             <div class="bg-white p-5 rounded-[24px] border shadow-sm mt-6">
                 <h3 class="font-black text-sm mb-4">👥 จัดการพนักงานและกะ</h3>
                 <div class="grid grid-cols-1 gap-2 mb-4">
+                    <input id="emp-id" type="text" placeholder="รหัสพนักงาน (เช่น EMP001)" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-gray-50 outline-none">
                     <input id="emp-name" type="text" placeholder="ชื่อพนักงาน" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-gray-50 outline-none">
                     <input id="emp-shift" type="text" placeholder="กะ เช่น เช้า 08:00-16:00" class="w-full border-2 p-3 rounded-xl text-sm font-bold bg-gray-50 outline-none">
                     <button onclick="addEmployeeShift()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-black text-xs shadow-md">+ เพิ่มพนักงาน/กะ</button>
                 </div>
+                <div class="text-[10px] text-gray-400 font-bold mb-2">ระบบจะสร้างรหัสเฉพาะอัตโนมัติให้แต่ละพนักงาน</div>
                 <div id="employee-shift-list" class="space-y-3"></div>
             </div>
         </div>
@@ -240,7 +242,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="modal-admin-pin">
+    <div class="modal-overlay hidden" id="modal-admin-pin">
         <div class="modal-content text-center">
             <h3 class="font-black text-3xl mb-1 text-gray-800">SECURITY PIN</h3>
             <p class="text-[11px] text-gray-400 mb-6 font-bold uppercase" id="admin-pin-desc">รหัสผ่านเพื่อเข้าระบบ</p>
@@ -253,7 +255,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="modal-recovery">
+    <div class="modal-overlay hidden" id="modal-recovery">
         <div class="modal-content text-center border-t-4 border-red-500">
             <h3 class="font-black text-2xl mb-1 text-red-600">กู้คืนรหัสผ่าน</h3>
             <p class="text-[11px] text-gray-500 mb-5 font-bold uppercase">ตอบคำถามลับ 3 ข้อให้ถูกต้อง 100%</p>
@@ -267,7 +269,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="modal-menu-form">
+    <div class="modal-overlay hidden" id="modal-menu-form">
         <div class="modal-content">
             <h3 class="font-black text-2xl mb-5 border-b pb-4 text-gray-800">เพิ่มรายการเมนู</h3>
             <input type="hidden" id="form-menu-id">
@@ -287,7 +289,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="modal-addon-select">
+    <div class="modal-overlay hidden" id="modal-addon-select">
         <div class="modal-content">
             <h3 class="font-black text-2xl mb-2 text-gray-800" id="addon-modal-name">ชื่อเมนู</h3>
             <p class="theme-text font-black text-lg mb-4 border-b pb-4">฿<span id="addon-modal-price">0</span></p>
@@ -307,7 +309,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="modal-pro-unlock">
+    <div class="modal-overlay hidden" id="modal-pro-unlock">
         <div class="modal-content text-center">
             <h3 class="font-black text-3xl mb-1 text-orange-600 tracking-tighter">👑 UNLOCK PRO</h3>
             <p class="text-[11px] text-gray-500 mb-6 font-bold uppercase tracking-widest">ปลดล็อคฟีเจอร์และยอดขายย้อนหลัง</p>
@@ -330,7 +332,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="modal-review">
+    <div class="modal-overlay hidden" id="modal-review">
         <div class="modal-content bg-gray-50 p-5">
             <div class="bg-white p-5 rounded-[24px] shadow-sm border mb-4 text-center">
                 <h2 class="font-black text-xl mb-1">📝 ตรวจสอบออเดอร์</h2>
@@ -348,7 +350,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="modal-checkout">
+    <div class="modal-overlay hidden" id="modal-checkout">
         <div class="modal-content p-0 overflow-hidden bg-gray-100 max-w-[400px]">
             <div class="bg-white p-6 text-center shadow-sm relative z-10">
                 <h2 class="font-black text-2xl mb-1 text-gray-800">เช็คบิล</h2>
