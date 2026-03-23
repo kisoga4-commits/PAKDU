@@ -577,8 +577,19 @@ function addEmployeeShift() {
     idInput.value = "";
     nameInput.value = "";
     shiftInput.value = "";
+    closeModal('modal-employee-setup');
     saveData();
     showToast("✅ เพิ่มพนักงานและกะแล้ว", "success");
+}
+function openEmployeeSetupModal() {
+    const idInput = document.getElementById('emp-id');
+    const nameInput = document.getElementById('emp-name');
+    const shiftInput = document.getElementById('emp-shift');
+    if(idInput) idInput.value = "";
+    if(nameInput) nameInput.value = "";
+    if(shiftInput) shiftInput.value = "";
+    openModal('modal-employee-setup');
+    setTimeout(() => idInput?.focus(), 120);
 }
 function removeEmployeeShift(id) {
     if(!confirm("ลบพนักงานคนนี้ออกจากตารางกะ?")) return;
