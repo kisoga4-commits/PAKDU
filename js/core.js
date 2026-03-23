@@ -2,6 +2,8 @@ const DB_NAME = "FAKDU_PWA_DB_V930";
 let idb;
 let IS_PRO = false; 
 let isAdminLoggedIn = localStorage.getItem('FAKDU_ADMIN_LOGGED_IN') === 'true'; 
+let isPrivilegedLoggedIn = localStorage.getItem('FAKDU_PRIV_LOGGED_IN') === 'true' || isAdminLoggedIn;
+let currentAuthRole = localStorage.getItem('FAKDU_AUTH_ROLE') || (isAdminLoggedIn ? 'admin' : 'admin');
 
 const DEFAULT_DB = { 
     shopName: "FAKDU", logo: "", theme: "#800000", bgColor: "#f8fafc", 
@@ -294,6 +296,36 @@ function startHeartbeatMonitor() {
 }
 
 let pendingAdminAction = null; 
+function setAuthRole(role = 'admin') {
+    currentAuthRole = role === 'employee' ? 'employee' : 'admin';
+    const adminBtn = document.getElementById('role-admin-btn');
+    const employeeBtn = document.getElementById('role-employee-btn');
+    const desc = document.getElementById('admin-pin-desc');
+    const pinInput = document.getElementById('admin-pin-input');
+
+    if(adminBtn && employeeBtn) {
+        adminBtn.classList.toggle('bg-white', currentAuthRole === 'admin');
+        adminBtn.classList.toggle('text-gray-800', currentAuthRole === 'admin');
+        adminBtn.classList.toggle('border-gray-200', currentAuthRole === 'admin');
+        adminBtn.classList.toggle('bg-transparent', currentAuthRole !== 'admin');
+        adminBtn.classList.toggle('text-gray-500', currentAuthRole !== 'admin');
+        adminBtn.classList.toggle('border-transparent', currentAuthRole !== 'admin');
+
+        employeeBtn.classList.toggle('bg-white', currentAuthRole === 'employee');
+        employeeBtn.classList.toggle('text-gray-800', currentAuthRole === 'employee');
+        employeeBtn.classList.toggle('border-gray-200', currentAuthRole === 'employee');
+        employeeBtn.classList.toggle('bg-transparent', currentAuthRole !== 'employee');
+        employeeBtn.classList.toggle('text-gray-500', currentAuthRole !== 'employee');
+        employeeBtn.classList.toggle('border-transparent', currentAuthRole !== 'employee');
+    }
+
+    if(desc) desc.innerText = currentAuthRole === 'admin' ? "ใส่ Admin PIN" : "ใส่รหัสพนักงาน";
+    if(pinInput) {
+        pinInput.placeholder = currentAuthRole === 'admin' ? "PIN" : "EMP-XXXXXX";
+        pinInput.value = "";
+    }
+}
+
 function switchTab(id, el = null) { 
     playSound('click'); 
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); 
@@ -303,13 +335,39 @@ function switchTab(id, el = null) {
     if(id === 'manage') renderAnalytics(); 
 }
 function attemptAdmin(target, el) { 
-    if(isAdminLoggedIn) { switchTab(target, el); } 
-    else { playSound('click'); pendingAdminAction = { target, el }; document.getElementById('admin-pin-desc').innerText = "รหัสผ่านเพื่อเข้าระบบ"; document.getElementById('admin-pin-input').value = ""; openModal('modal-admin-pin'); setTimeout(() => document.getElementById('admin-pin-input').focus(), 100); } 
+    if(isPrivilegedLoggedIn) { switchTab(target, el); } 
+    else {
+        playSound('click');
+        pendingAdminAction = { target, el };
+        setAuthRole('admin');
+        openModal('modal-admin-pin');
+        setTimeout(() => document.getElementById('admin-pin-input').focus(), 100);
+    } 
 }
 function verifyAdminPin() { 
-    const pin = document.getElementById('admin-pin-input').value.trim(); 
-    if(pin === db.adminPin || pin === "FAKDU-V7-ADMIN") { closeModal('modal-admin-pin'); playSound('success'); localStorage.setItem('FAKDU_ADMIN_LOGGED_IN', 'true'); isAdminLoggedIn = true; if(pendingAdminAction) switchTab(pendingAdminAction.target, pendingAdminAction.el); } 
-    else { document.getElementById('admin-pin-input').value = ""; showToast("รหัส PIN ผิด", "error"); triggerSpyBell("Admin PIN Error"); } 
+    const pin = document.getElementById('admin-pin-input').value.trim().toUpperCase();
+    const isAdminRole = currentAuthRole === 'admin';
+    const adminPin = (db.adminPin || '').trim().toUpperCase();
+    const isValidAdmin = isAdminRole && (pin === adminPin || pin === "FAKDU-V7-ADMIN");
+    const isValidEmployee = !isAdminRole && (db.employees || []).some(emp => (emp.accessCode || '').trim().toUpperCase() === pin);
+    const isValid = isValidAdmin || isValidEmployee;
+
+    if(isValid) {
+        closeModal('modal-admin-pin');
+        playSound('success');
+        isAdminLoggedIn = isAdminRole;
+        isPrivilegedLoggedIn = true;
+        localStorage.setItem('FAKDU_ADMIN_LOGGED_IN', isAdminRole ? 'true' : 'false');
+        localStorage.setItem('FAKDU_PRIV_LOGGED_IN', 'true');
+        localStorage.setItem('FAKDU_AUTH_ROLE', currentAuthRole);
+        showToast(isAdminRole ? "เข้าสู่โหมด Admin สำเร็จ" : "เข้าสู่โหมดพนักงานสำเร็จ", "success");
+        if(pendingAdminAction) switchTab(pendingAdminAction.target, pendingAdminAction.el);
+        return;
+    }
+
+    document.getElementById('admin-pin-input').value = "";
+    showToast(isAdminRole ? "รหัส Admin PIN ผิด" : "รหัสพนักงานผิด", "error");
+    triggerSpyBell(isAdminRole ? "Admin PIN Error" : "Employee Code Error");
 }
 document.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
@@ -317,7 +375,16 @@ document.addEventListener('keydown', (e) => {
     if (!modal || modal.classList.contains('hidden')) return;
     verifyAdminPin();
 });
-function adminLogout() { localStorage.setItem('FAKDU_ADMIN_LOGGED_IN', 'false'); isAdminLoggedIn = false; switchTab('customer', document.querySelector('#tab-customer')); showToast("🔒 ล็อคแอดมินแล้ว", "success"); }
+function adminLogout() {
+    localStorage.setItem('FAKDU_ADMIN_LOGGED_IN', 'false');
+    localStorage.setItem('FAKDU_PRIV_LOGGED_IN', 'false');
+    localStorage.removeItem('FAKDU_AUTH_ROLE');
+    isAdminLoggedIn = false;
+    isPrivilegedLoggedIn = false;
+    currentAuthRole = 'admin';
+    switchTab('customer', document.querySelector('#tab-customer'));
+    showToast("🔒 ออกจากโหมดจัดการแล้ว", "success");
+}
 
 function changeGridZoom(dir) { playSound('click'); gridZoom += dir; if(gridZoom < 2) gridZoom = 2; if(gridZoom > 5) gridZoom = 5; updateGridZoomUI(); }
 function updateGridZoomUI() { 

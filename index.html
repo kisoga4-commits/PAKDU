@@ -246,6 +246,10 @@
         <div class="modal-content text-center">
             <h3 class="font-black text-3xl mb-1 text-gray-800">SECURITY PIN</h3>
             <p class="text-[11px] text-gray-400 mb-6 font-bold uppercase" id="admin-pin-desc">รหัสผ่านเพื่อเข้าระบบ</p>
+            <div class="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-xl mb-4">
+                <button id="role-admin-btn" onclick="setAuthRole('admin')" class="auth-role-btn bg-white text-gray-800 font-black text-xs py-2 rounded-lg border border-gray-200">Admin</button>
+                <button id="role-employee-btn" onclick="setAuthRole('employee')" class="auth-role-btn text-gray-500 font-black text-xs py-2 rounded-lg border border-transparent bg-transparent">พนักงาน</button>
+            </div>
             <input type="password" id="admin-pin-input" class="w-full border-2 border-gray-200 p-5 rounded-[24px] text-center text-5xl font-black mb-4 outline-none bg-gray-50 tracking-[12px] focus:border-primary">
             <div class="flex gap-4 mb-4">
                 <button onclick="closeModal('modal-admin-pin')" class="flex-1 bg-gray-100 py-4 rounded-[20px] font-black text-gray-500 text-lg">ยกเลิก</button>
