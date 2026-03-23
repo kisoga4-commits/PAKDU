@@ -9,7 +9,8 @@ const DEFAULT_DB = {
     licenseToken: null, 
     recPhone: null, recColor: null, recAnimal: null, 
     bank: "", ppay: "", qrOffline: "", syncKey: "A1B2C3", 
-    units: [], items: [], sales: [], carts: {}, fraudLogs: [] 
+    units: [], items: [], sales: [], carts: {}, fraudLogs: [],
+    employees: []
 };
 let db = { ...DEFAULT_DB };
 
@@ -389,7 +390,7 @@ function confirmPayment(method) {
 }
 
 function switchManageSub(s, el) { playSound('click'); document.querySelectorAll('.manage-tab').forEach(t => t.classList.remove('active', 'bg-white', 'shadow-sm', 'text-gray-800')); document.querySelectorAll('.manage-tab').forEach(t => t.classList.add('text-gray-500')); el.classList.remove('text-gray-500'); el.classList.add('active', 'bg-white', 'shadow-sm', 'text-gray-800'); document.getElementById('sub-dash').style.display = s === 'dash' ? 'block' : 'none'; document.getElementById('sub-menu').style.display = s === 'menu' ? 'block' : 'none'; }
-function switchDashTab(tab, el) { playSound('click'); document.querySelectorAll('.dash-sub-tab').forEach(t => t.classList.remove('active', 'bg-white', 'shadow-sm', 'text-gray-800')); document.querySelectorAll('.dash-sub-tab').forEach(t => t.classList.add('text-gray-500')); el.classList.remove('text-gray-500'); el.classList.add('active', 'bg-white', 'shadow-sm', 'text-gray-800'); document.getElementById('dash-history').style.display = tab === 'history' ? 'block' : 'none'; document.getElementById('dash-top').style.display = tab === 'top' ? 'block' : 'none'; }
+function switchDashTab(tab, el) { playSound('click'); document.querySelectorAll('.dash-sub-tab').forEach(t => t.classList.remove('active', 'bg-white', 'shadow-sm', 'text-gray-800')); document.querySelectorAll('.dash-sub-tab').forEach(t => t.classList.add('text-gray-500')); el.classList.remove('text-gray-500'); el.classList.add('active', 'bg-white', 'shadow-sm', 'text-gray-800'); document.getElementById('dash-history').style.display = tab === 'history' ? 'block' : 'none'; document.getElementById('dash-top').style.display = tab === 'top' ? 'block' : 'none'; document.getElementById('dash-shifts').style.display = tab === 'shifts' ? 'block' : 'none'; }
 function calculateCustomSalesRealtime() {
     const s = document.getElementById('search-start').value; const e = document.getElementById('search-end').value; if(!s || !e) return;
     const td = getLocalYYYYMMDD(); if(!IS_PRO && (s !== td || e !== td)) { document.getElementById('search-start').value = td; document.getElementById('search-end').value = td; showToast("🔒 รุ่นฟรีดูได้เฉพาะยอดวันนี้", "error"); }
@@ -410,14 +411,56 @@ function renderAnalytics() {
     const topBox = document.getElementById('top-items-list'); topBox.innerHTML = ''; let topItems = Object.entries(itemCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
     if(topItems.length === 0) topBox.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">ยังไม่มีข้อมูลยอดขาย</p>';
     topItems.forEach((item, idx) => { const medal = idx===0?'🥇':idx===1?'🥈':idx===2?'🥉':(idx+1)+'.'; topBox.innerHTML += `<div class="flex justify-between items-center bg-gray-50 p-2.5 rounded-xl border mb-2"><div class="font-black text-gray-800">${medal} ${item[0]}</div><div class="text-[10px] font-bold bg-white px-2 py-1 rounded text-gray-500 shadow-sm">ขายได้ ${item[1]}</div></div>`; });
+    renderShiftTab();
 }
 function clearSales() { if(confirm("ล้างประวัติยอดขายทั้งหมด? (ไม่สามารถกู้คืนได้)")) { db.sales = []; saveData(); showToast("🗑️ ล้างยอดขายแล้ว", "success"); document.getElementById('search-total').innerText = '0'; } }
 
 function renderAdminLists() { 
     const box = document.getElementById('admin-menu-list'); box.innerHTML = ''; document.getElementById('menu-count').innerText = db.items.length; 
     db.items.forEach(i => { box.innerHTML += `<div class="flex justify-between items-center py-3 border-b border-gray-50"><div><div class="font-black text-gray-800 text-sm">${i.name}</div><div class="text-xs theme-text font-black">฿${i.price}</div></div><div class="flex gap-2"><button onclick="deleteItem(${i.id})" class="text-[10px] text-red-600 font-bold bg-red-50 px-3 py-2 rounded-xl">ลบ</button></div></div>`; }); 
+    renderEmployeeList();
 }
 let tempAddons = [];
+
+function addEmployeeShift() {
+    const nameInput = document.getElementById('emp-name');
+    const shiftInput = document.getElementById('emp-shift');
+    if(!nameInput || !shiftInput) return;
+    const name = nameInput.value.trim();
+    const shift = shiftInput.value.trim();
+    if(!name || !shift) return showToast("กรอกชื่อและกะให้ครบ", "error");
+    if(!db.employees) db.employees = [];
+    db.employees.push({ id: Date.now(), name, shift, createdAt: new Date().toISOString() });
+    nameInput.value = "";
+    shiftInput.value = "";
+    saveData();
+    showToast("✅ เพิ่มพนักงานและกะแล้ว", "success");
+}
+function removeEmployeeShift(id) {
+    if(!confirm("ลบพนักงานคนนี้ออกจากตารางกะ?")) return;
+    db.employees = (db.employees || []).filter(emp => emp.id !== id);
+    saveData();
+}
+function renderEmployeeList() {
+    const box = document.getElementById('employee-shift-list');
+    if(!box) return;
+    const employees = db.employees || [];
+    if(employees.length === 0) {
+        box.innerHTML = '<div class="text-xs text-gray-400 font-bold py-3 text-center">ยังไม่มีพนักงาน</div>';
+        return;
+    }
+    box.innerHTML = employees.map(emp => `<div class="flex justify-between items-center py-3 border-b border-gray-50"><div><div class="font-black text-gray-800 text-sm">${emp.name}</div><div class="text-[11px] text-blue-600 font-bold">กะ: ${emp.shift}</div></div><button onclick="removeEmployeeShift(${emp.id})" class="text-[10px] text-red-600 font-bold bg-red-50 px-3 py-2 rounded-xl">ลบ</button></div>`).join('');
+}
+function renderShiftTab() {
+    const box = document.getElementById('employee-shift-report');
+    if(!box) return;
+    const employees = db.employees || [];
+    if(employees.length === 0) {
+        box.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">ยังไม่มีข้อมูลกะพนักงาน</p>';
+        return;
+    }
+    box.innerHTML = employees.map((emp, idx) => `<div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl border mb-2"><div><div class="font-black text-gray-800">${idx + 1}. ${emp.name}</div><div class="text-[11px] text-gray-500 font-bold">กะทำงาน: ${emp.shift}</div></div><div class="text-[10px] text-blue-600 font-black bg-white px-2 py-1 rounded-full border border-blue-100">พนักงาน</div></div>`).join('');
+}
 
 // --- ฟังก์ชันเปิดกล้องสแกน (สำหรับปุ่มในหน้า Index) ---
 function openClientScanner() {
